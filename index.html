@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <title>PDA扫码</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- 引入 html5-qrcode 库，兼容性更好的条码扫描解决方案 -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 首页 - 导航菜单 -->
+        <div id="homePage" class="page active">
+            <div class="header">
+                <h1>PDA扫码系统</h1>
+            </div>
+            <div class="home-container">
+                <div class="menu-grid">
+                    <button id="arrivalMenuBtn" class="menu-item">
+                        <div class="menu-icon arrival-icon"></div>
+                        <span>到货</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 到货列表页面 -->
+        <div id="listPage" class="page">
+            <div class="header">
+                <button id="listBackBtn" class="back-btn">&lt; 返回</button>
+                <h1>到货列表</h1>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div class="search-bar">
+                <div class="search-input-wrapper">
+                    <input type="text" id="searchInput" placeholder="输入采购单号筛选">
+                    <button id="clearSearchBtn" class="clear-btn hidden">&times;</button>
+                </div>
+                <button id="scanBtn" class="scan-icon-btn">
+                    <span class="scan-icon"></span>
+                </button>
+            </div>
+
+            <!-- 列表容器 -->
+            <div id="listContainer" class="list-container">
+                <div id="listContent" class="list-content">
+                    <!-- 动态渲染列表 -->
+                </div>
+                <div id="loadingMore" class="loading-more hidden">
+                    <div class="loading-spinner-small"></div>
+                    <span>加载中...</span>
+                </div>
+                <div id="noMoreData" class="no-more-data hidden">
+                    <span>没有更多数据了</span>
+                </div>
+                <div id="emptyList" class="empty-state hidden">
+                    <div class="empty-state-icon">📦</div>
+                    <p>暂无到货数据</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 详情页面 -->
+        <div id="detailPage" class="page">
+            <div class="header">
+                <button id="detailBackBtn" class="back-btn">&lt; 返回</button>
+                <h1>采购单详情</h1>
+            </div>
+
+            <div class="result-container">
+                <!-- 基本信息卡片 -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">基本信息</span>
+                        <span id="statusBadge" class="status-badge"></span>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <span class="label">采购单号</span>
+                            <span id="purchaseNo" class="value"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">归属人</span>
+                            <span id="belongsUserName" class="value"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">采购方</span>
+                            <span id="purchaserName" class="value"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 商品列表 -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">商品明细</span>
+                        <span id="itemCount" class="item-count"></span>
+                    </div>
+                    <div id="itemsList" class="items-list">
+                        <!-- 商品列表动态渲染 -->
+                    </div>
+                </div>
+
+                <!-- 到货操作区域 -->
+                <div class="card" id="arrivalCard">
+                    <div class="card-header">
+                        <span class="card-title">到货操作</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="arrival-info">
+                            <p class="arrival-tip">请在上方商品列表中填写各商品的到货数量，然后点击确认到货</p>
+                        </div>
+                        <button id="confirmArrivalBtn" class="arrival-btn">
+                            <span class="arrival-icon"></span>
+                            确认到货
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 加载状态 -->
+        <div id="loading" class="loading-overlay hidden">
+            <div class="loading-spinner"></div>
+            <p>加载中...</p>
+        </div>
+
+        <!-- 错误提示 -->
+        <div id="errorToast" class="toast hidden">
+            <span id="errorMessage"></span>
+        </div>
+
+        <!-- 成功提示 -->
+        <div id="successToast" class="toast toast-success hidden">
+            <span id="successMessage"></span>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
