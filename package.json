@@ -13,7 +13,8 @@
   "dependencies": {
     "vue": "^2.7.16",
     "vue-router": "^3.6.5",
-    "html5-qrcode": "^2.3.8"
+    "html5-qrcode": "^2.3.8",
+    "element-ui": "^2.15.14"
   },
   "devDependencies": {
     "@vitejs/plugin-basic-ssl": "^1.1.0",

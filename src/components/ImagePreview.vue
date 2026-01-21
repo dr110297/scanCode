@@ -4,7 +4,13 @@
       <span v-if="total > 1">{{ currentIndex + 1 }} / {{ total }}</span>
       <button class="image-preview-close" @click="handleClose">&times;</button>
     </div>
-    <div class="image-preview-content" @click.stop>
+    <div
+      class="image-preview-content"
+      @click.stop
+      @touchstart="handleTouchStart"
+      @touchmove="handleTouchMove"
+      @touchend="handleTouchEnd"
+    >
       <button
         v-if="total > 1"
         class="image-preview-arrow prev"
@@ -43,7 +49,9 @@ export default {
   },
   data() {
     return {
-      currentIndex: 0
+      currentIndex: 0,
+      touchStartX: 0,
+      touchEndX: 0
     }
   },
   computed: {
@@ -85,6 +93,25 @@ export default {
       } else {
         this.currentIndex = 0
       }
+    },
+    handleTouchStart(e) {
+      this.touchStartX = e.touches[0].clientX
+    },
+    handleTouchMove(e) {
+      this.touchEndX = e.touches[0].clientX
+    },
+    handleTouchEnd() {
+      const diff = this.touchStartX - this.touchEndX
+      const threshold = 50
+      if (Math.abs(diff) > threshold) {
+        if (diff > 0) {
+          this.next()
+        } else {
+          this.prev()
+        }
+      }
+      this.touchStartX = 0
+      this.touchEndX = 0
     }
   },
   beforeDestroy() {

@@ -91,30 +91,20 @@
           <div class="item-arrival-input">
             <div class="arrival-input-group">
               <label>本次到货:</label>
-              <div class="number-input">
-                <button type="button" class="num-btn minus" @click="decreaseArrival(getOriginalIndex(item))">-</button>
-                <input
-                  type="number"
-                  class="arrival-num-input"
-                  v-model.number="arrivalInputs[getOriginalIndex(item)].arrivalNum"
-                  :min="0"
-                  :max="(item.num || 0) - (item.arrivalNum || 0)"
-                />
-                <button type="button" class="num-btn plus" @click="increaseArrival(getOriginalIndex(item), item)">+</button>
-              </div>
+              <el-input-number
+                v-model="arrivalInputs[getOriginalIndex(item)].arrivalNum"
+                :min="0"
+                :max="(item.num || 0) - (item.arrivalNum || 0)"
+                size="small"
+              />
             </div>
             <div class="arrival-input-group">
               <label>异常数量:</label>
-              <div class="number-input">
-                <button type="button" class="num-btn" @click="decreaseAbnormal(getOriginalIndex(item))">-</button>
-                <input
-                  type="number"
-                  class="abnormal-num-input"
-                  v-model.number="arrivalInputs[getOriginalIndex(item)].abnormalNum"
-                  :min="0"
-                />
-                <button type="button" class="num-btn" @click="increaseAbnormal(getOriginalIndex(item))">+</button>
-              </div>
+              <el-input-number
+                v-model="arrivalInputs[getOriginalIndex(item)].abnormalNum"
+                :min="0"
+                size="small"
+              />
             </div>
           </div>
         </div>
@@ -228,25 +218,6 @@ export default {
           abnormalNum: 0
         }))
       }
-    },
-    decreaseArrival(index) {
-      if (this.arrivalInputs[index].arrivalNum > 0) {
-        this.arrivalInputs[index].arrivalNum--
-      }
-    },
-    increaseArrival(index, item) {
-      const max = (item.num || 0) - (item.arrivalNum || 0)
-      if (this.arrivalInputs[index].arrivalNum < max) {
-        this.arrivalInputs[index].arrivalNum++
-      }
-    },
-    decreaseAbnormal(index) {
-      if (this.arrivalInputs[index].abnormalNum > 0) {
-        this.arrivalInputs[index].abnormalNum--
-      }
-    },
-    increaseAbnormal(index) {
-      this.arrivalInputs[index].abnormalNum++
     },
     async handleConfirmArrival() {
       if (!this.detailData) {
