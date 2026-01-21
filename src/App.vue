@@ -1,10 +1,8 @@
 <template>
   <div id="app">
-    <router-view v-slot="{ Component }">
-      <transition name="slide" mode="out-in">
-        <component :is="Component" />
-      </transition>
-    </router-view>
+    <transition name="slide" mode="out-in">
+      <router-view />
+    </transition>
 
     <!-- 加载状态 -->
     <div v-if="loading" class="loading-overlay">
@@ -25,47 +23,41 @@
 </template>
 
 <script>
-import { ref, provide } from 'vue'
-
 export default {
   name: 'App',
-  setup() {
-    const loading = ref(false)
-    const errorMessage = ref('')
-    const successMessage = ref('')
-
-    const showLoading = () => {
-      loading.value = true
-    }
-
-    const hideLoading = () => {
-      loading.value = false
-    }
-
-    const showError = (message) => {
-      errorMessage.value = message
-      setTimeout(() => {
-        errorMessage.value = ''
-      }, 3000)
-    }
-
-    const showSuccess = (message) => {
-      successMessage.value = message
-      setTimeout(() => {
-        successMessage.value = ''
-      }, 3000)
-    }
-
-    // 提供给子组件使用
-    provide('showLoading', showLoading)
-    provide('hideLoading', hideLoading)
-    provide('showError', showError)
-    provide('showSuccess', showSuccess)
-
+  data() {
     return {
-      loading,
-      errorMessage,
-      successMessage
+      loading: false,
+      errorMessage: '',
+      successMessage: ''
+    }
+  },
+  provide() {
+    return {
+      showLoading: this.showLoading,
+      hideLoading: this.hideLoading,
+      showError: this.showError,
+      showSuccess: this.showSuccess
+    }
+  },
+  methods: {
+    showLoading() {
+      this.loading = true
+    },
+    hideLoading() {
+      this.loading = false
+    },
+    showError(message) {
+      this.errorMessage = message
+      setTimeout(() => {
+        this.errorMessage = ''
+      }, 3000)
+    },
+    showSuccess(message) {
+      this.successMessage = message
+      setTimeout(() => {
+        this.successMessage = ''
+      }, 3000)
     }
   }
 }
@@ -77,7 +69,7 @@ export default {
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-.slide-enter-from {
+.slide-enter {
   transform: translateX(100%);
   opacity: 0;
 }

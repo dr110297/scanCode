@@ -38,8 +38,12 @@ async function request(url, options = {}) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    const data = await response.json()
-    return data
+    // 处理空响应
+    const text = await response.text()
+    if (!text) {
+      return { success: true }
+    }
+    return JSON.parse(text)
   } catch (error) {
     console.error('API请求失败:', error)
     throw error

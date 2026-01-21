@@ -1,10 +1,10 @@
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import vue2 from '@vitejs/plugin-vue2'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 
 export default defineConfig({
   plugins: [
-    vue(),
+    vue2(),
     basicSsl()
   ],
   server: {

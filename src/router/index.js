@@ -1,7 +1,18 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/Home.vue'
-import List from '../views/List.vue'
-import Detail from '../views/Detail.vue'
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+
+Vue.use(VueRouter)
+
+// 到货模块
+const ArrivalList = () => import('../views/arrival/List.vue')
+const ArrivalDetail = () => import('../views/arrival/Detail.vue')
+
+// 收货模块
+const ReceiveList = () => import('../views/receive/List.vue')
+const ReceiveDetail = () => import('../views/receive/Detail.vue')
+
+// 首页
+const Home = () => import('../views/Home.vue')
 
 const routes = [
   {
@@ -9,20 +20,32 @@ const routes = [
     name: 'Home',
     component: Home
   },
+  // 到货模块路由
   {
-    path: '/list',
-    name: 'List',
-    component: List
+    path: '/arrival/list',
+    name: 'ArrivalList',
+    component: ArrivalList
   },
   {
-    path: '/detail',
-    name: 'Detail',
-    component: Detail
+    path: '/arrival/detail',
+    name: 'ArrivalDetail',
+    component: ArrivalDetail
+  },
+  // 收货模块路由
+  {
+    path: '/receive/list',
+    name: 'ReceiveList',
+    component: ReceiveList
+  },
+  {
+    path: '/receive/detail',
+    name: 'ReceiveDetail',
+    component: ReceiveDetail
   }
 ]
 
-const router = createRouter({
-  history: createWebHistory(),
+const router = new VueRouter({
+  mode: 'history',
   routes
 })
 
