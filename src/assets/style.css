@@ -557,6 +557,59 @@ html, body {
     color: #999;
 }
 
+.section-title-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hide-completed-switch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.hide-completed-switch .switch-label {
+    font-size: 13px;
+    color: #666;
+}
+
+.hide-completed-switch .switch-btn {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    background: #ddd;
+    border-radius: 11px;
+    transition: background 0.3s;
+}
+
+.hide-completed-switch .switch-btn.active {
+    background: #52c41a;
+}
+
+.hide-completed-switch .switch-dot {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: left 0.3s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.hide-completed-switch .switch-btn.active .switch-dot {
+    left: 20px;
+}
+
+.card-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
 .card.item-card {
     margin-bottom: 10px;
     padding: 12px 15px;
@@ -627,8 +680,10 @@ html, body {
 
 .quantity-row {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
     font-size: 12px;
+    margin-bottom: 4px;
 }
 
 .quantity-label {

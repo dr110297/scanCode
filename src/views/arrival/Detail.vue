@@ -9,10 +9,12 @@
       <!-- 基本信息卡片 -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">基本信息</span>
-          <span :class="['status-badge', getStatusClass(detailData && detailData.status && detailData.status.value)]">
-            {{ detailData && detailData.statusDesc || '' }}
-          </span>
+          <div class="header-left">
+            <span class="card-title">基本信息</span>
+            <span :class="['status-badge', getStatusClass(detailData && detailData.status && detailData.status.value)]">
+              {{ detailData && detailData.statusDesc || '' }}
+            </span>
+          </div>
         </div>
         <div class="card-body">
           <div class="info-row">
@@ -32,13 +34,21 @@
 
       <!-- 商品列表标题 -->
       <div class="section-title">
-        <span>商品明细</span>
-        <span class="item-count">共{{ detailData && detailData.items && detailData.items.length || 0 }}件</span>
+        <div class="section-title-left">
+          <span>商品明细</span>
+          <span class="item-count">共{{ filteredItems.length }}件</span>
+        </div>
+        <div class="hide-completed-switch" @click="hideCompleted = !hideCompleted">
+          <span class="switch-label">隐藏已到货</span>
+          <span :class="['switch-btn', { active: hideCompleted }]">
+            <span class="switch-dot"></span>
+          </span>
+        </div>
       </div>
 
       <!-- 每个商品独立卡片 -->
       <div
-        v-for="(item, index) in (detailData && detailData.items || [])"
+        v-for="item in filteredItems"
         :key="item.id"
         class="card item-card"
       >
@@ -46,6 +56,9 @@
           <img
             class="item-image"
             :src="item.mainImage"
+            referrerpolicy="no-referrer"
+            @click="openPreview(getOriginalIndex(item))"
+            @error="handleImageError"
           />
           <div class="item-basic-info">
             <div class="item-name">{{ item.productName || '-' }}</div>
@@ -57,7 +70,7 @@
         <div class="item-info">
           <div class="item-quantity-info">
             <div class="quantity-row">
-              <span class="quantity-label">采购数量:</span>
+              <span class="quantity-label">采购量:</span>
               <span class="quantity-value">{{ item.num || 0 }}</span>
             </div>
             <div class="quantity-row">
@@ -79,28 +92,28 @@
             <div class="arrival-input-group">
               <label>本次到货:</label>
               <div class="number-input">
-                <button type="button" class="num-btn minus" @click="decreaseArrival(index)">-</button>
+                <button type="button" class="num-btn minus" @click="decreaseArrival(getOriginalIndex(item))">-</button>
                 <input
                   type="number"
                   class="arrival-num-input"
-                  v-model.number="arrivalInputs[index].arrivalNum"
+                  v-model.number="arrivalInputs[getOriginalIndex(item)].arrivalNum"
                   :min="0"
                   :max="(item.num || 0) - (item.arrivalNum || 0)"
                 />
-                <button type="button" class="num-btn plus" @click="increaseArrival(index, item)">+</button>
+                <button type="button" class="num-btn plus" @click="increaseArrival(getOriginalIndex(item), item)">+</button>
               </div>
             </div>
             <div class="arrival-input-group">
               <label>异常数量:</label>
               <div class="number-input">
-                <button type="button" class="num-btn" @click="decreaseAbnormal(index)">-</button>
+                <button type="button" class="num-btn" @click="decreaseAbnormal(getOriginalIndex(item))">-</button>
                 <input
                   type="number"
                   class="abnormal-num-input"
-                  v-model.number="arrivalInputs[index].abnormalNum"
+                  v-model.number="arrivalInputs[getOriginalIndex(item)].abnormalNum"
                   :min="0"
                 />
-                <button type="button" class="num-btn" @click="increaseAbnormal(index)">+</button>
+                <button type="button" class="num-btn" @click="increaseAbnormal(getOriginalIndex(item))">+</button>
               </div>
             </div>
           </div>
@@ -128,11 +141,19 @@
         </div>
       </div>
     </div>
+
+    <!-- 图片预览 -->
+    <ImagePreview
+      :visible.sync="previewVisible"
+      :images="previewImages"
+      :start-index="previewIndex"
+    />
   </div>
 </template>
 
 <script>
 import { fbaPurchaseArrival } from '../../api'
+import ImagePreview from '../../components/ImagePreview.vue'
 
 // 状态枚举: -3:草稿, 0:待下单, 1:待到货, 2:已完成, 3:已取消
 const STATUS_CLASS_MAP = {
@@ -145,12 +166,30 @@ const STATUS_CLASS_MAP = {
 
 export default {
   name: 'ArrivalDetail',
+  components: {
+    ImagePreview
+  },
   inject: ['showLoading', 'hideLoading', 'showError', 'showSuccess'],
   data() {
     return {
       detailData: null,
       previousPage: 'arrival-list',
-      arrivalInputs: []
+      arrivalInputs: [],
+      previewVisible: false,
+      previewImages: [],
+      previewIndex: 0,
+      hideCompleted: false
+    }
+  },
+  computed: {
+    filteredItems() {
+      if (!this.detailData || !this.detailData.items) return []
+      if (!this.hideCompleted) return this.detailData.items
+      return this.detailData.items.filter(item => {
+        const num = item.num || 0
+        const arrivalNum = item.arrivalNum || 0
+        return arrivalNum < num
+      })
     }
   },
   mounted() {
@@ -257,6 +296,20 @@ export default {
         this.showError(error.message || '到货确认失败，请重试')
         this.hideLoading()
       })
+    },
+    openPreview(index) {
+      if (this.detailData && this.detailData.items) {
+        this.previewImages = this.detailData.items.map(item => item.mainImage).filter(Boolean)
+        this.previewIndex = index
+        this.previewVisible = true
+      }
+    },
+    getOriginalIndex(item) {
+      if (!this.detailData || !this.detailData.items) return 0
+      return this.detailData.items.findIndex(i => i.id === item.id)
+    },
+    handleImageError(e) {
+      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCBmaWxsPSIjZjBmMGYwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2NjYyIgZm9udC1zaXplPSIxMiI+5Zu+54mH5Yqg6L295aSx6LSlPC90ZXh0Pjwvc3ZnPg=='
     }
   }
 }

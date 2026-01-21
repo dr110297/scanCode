@@ -54,11 +54,17 @@
           <!-- 第三行：商品图片列表 -->
           <div class="list-card-images">
             <div
-              v-for="subItem in item.items"
+              v-for="(subItem, subIndex) in item.items"
               :key="subItem.id"
               class="image-item"
+              @click.stop="openPreview(item.items, subIndex)"
             >
-              <img :src="subItem.mainImage" :alt="subItem.productName" />
+              <img
+                :src="subItem.mainImage"
+                :alt="subItem.productName"
+                referrerpolicy="no-referrer"
+                @error="handleImageError"
+              />
               <span class="image-num">{{ subItem.num || 0 }}</span>
             </div>
           </div>
@@ -92,11 +98,19 @@
       <div class="scanner-video-container" id="scanner-video-container"></div>
       <p class="scanner-tip">将条形码对准扫描框</p>
     </div>
+
+    <!-- 图片预览 -->
+    <ImagePreview
+      :visible.sync="previewVisible"
+      :images="previewImages"
+      :start-index="previewIndex"
+    />
   </div>
 </template>
 
 <script>
 import { getPdaListPaged, getPurchaseOrderByNo } from '../../api'
+import ImagePreview from '../../components/ImagePreview.vue'
 
 // 状态枚举: -3:草稿, 0:待下单, 1:待到货, 2:已完成, 3:已取消
 const STATUS_CLASS_MAP = {
@@ -109,6 +123,9 @@ const STATUS_CLASS_MAP = {
 
 export default {
   name: 'ArrivalList',
+  components: {
+    ImagePreview
+  },
   inject: ['showLoading', 'hideLoading', 'showError'],
   data() {
     return {
@@ -121,7 +138,10 @@ export default {
       searchKeyword: '',
       isScanning: false,
       html5QrCode: null,
-      searchDebounceTimer: null
+      searchDebounceTimer: null,
+      previewVisible: false,
+      previewImages: [],
+      previewIndex: 0
     }
   },
   mounted() {
@@ -334,6 +354,14 @@ export default {
       } finally {
         this.hideLoading()
       }
+    },
+    openPreview(items, index) {
+      this.previewImages = items.map(item => item.mainImage).filter(Boolean)
+      this.previewIndex = index
+      this.previewVisible = true
+    },
+    handleImageError(e) {
+      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCBmaWxsPSIjZjBmMGYwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2NjYyIgZm9udC1zaXplPSIxMiI+5Zu+54mH5Yqg6L295aSx6LSlPC90ZXh0Pjwvc3ZnPg=='
     }
   }
 }
