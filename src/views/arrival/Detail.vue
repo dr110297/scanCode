@@ -29,6 +29,10 @@
             <span class="label">采购方</span>
             <span class="value">{{ detailData && detailData.purchaserName || '-' }}</span>
           </div>
+          <div class="info-row">
+            <span class="label">运费</span>
+            <span class="value">{{ detailData && detailData.shipFee || '-' }}</span>
+          </div>
         </div>
       </div>
 
