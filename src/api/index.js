@@ -10,7 +10,8 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL
 const API_PATHS = {
   GET_PDA_LIST_PAGED: '/api/app/products/productsellfoxpurchaseorder/getpdalistpaged',
   GET_PURCHASE_ORDER: '/api/app/products/productsellfoxpurchaseorder/getpurchaseorderbyno',
-  FBA_PURCHASE_ARRIVAL: '/api/app/products/productsellfoxpurchaseorder/fbapurchasearrival'
+  FBA_PURCHASE_ARRIVAL: '/api/app/products/productsellfoxpurchaseorder/fbapurchasearrival',
+  GET_DING_USER_INFO: '/api/app/users/user/getdingusersinfo'
 }
 
 /**
@@ -73,7 +74,7 @@ export async function getPurchaseOrderByNo(purchaseNo) {
 }
 
 /**
- * 调���FBA采购到货接口
+ * 调用FBA采购到货接口
  */
 export async function fbaPurchaseArrival(params) {
   return request(API_PATHS.FBA_PURCHASE_ARRIVAL, {
@@ -82,8 +83,20 @@ export async function fbaPurchaseArrival(params) {
   })
 }
 
+/**
+ * 获取钉钉用户信息
+ */
+export async function getDingUserInfo(code) {
+  if (!code) {
+    throw new Error('免登code不能为空')
+  }
+  const url = `${API_PATHS.GET_DING_USER_INFO}?code=${encodeURIComponent(code)}`
+  return request(url, { method: 'GET' })
+}
+
 export default {
   getPdaListPaged,
   getPurchaseOrderByNo,
-  fbaPurchaseArrival
+  fbaPurchaseArrival,
+  getDingUserInfo
 }
