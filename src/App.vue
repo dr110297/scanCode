@@ -206,18 +206,16 @@ export default {
   position: fixed;
   top: 0;
   right: 0;
-  padding: 8px 12px;
+  padding: 16px 12px;
   z-index: 1000;
   /* background: rgba(255, 255, 255, 0.9); */
-  color: white;
-  line-height: 50px;
   border-bottom-left-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .user-name {
   font-size: 14px;
-  color: #333;
+   color: white;
   font-weight: 500;
 }
 
