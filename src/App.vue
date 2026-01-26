@@ -208,7 +208,9 @@ export default {
   right: 0;
   padding: 8px 12px;
   z-index: 1000;
-  background: rgba(255, 255, 255, 0.9);
+  /* background: rgba(255, 255, 255, 0.9); */
+  color: white;
+  line-height: 50px;
   border-bottom-left-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
