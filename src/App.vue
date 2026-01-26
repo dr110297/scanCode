@@ -78,7 +78,9 @@ export default {
       this.authLoading = true
       this.authErrorMsg = ''
 
-      if (typeof dd === 'undefined') {
+      // 通过 userAgent 判断是否在钉钉客户端中
+      const isDingTalk = /DingTalk/i.test(navigator.userAgent)
+      if (!isDingTalk) {
         this.authLoading = false
         this.authErrorMsg = '请从钉钉客户端打开此页面'
         return
