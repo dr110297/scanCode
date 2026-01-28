@@ -903,6 +903,12 @@ html, body {
 
 /* ==================== 通用样式 ==================== */
 
+/* 必填标识 */
+.required {
+    color: #f56c6c;
+    margin-right: 2px;
+}
+
 /* 加载状态 */
 .loading-overlay {
     position: fixed;

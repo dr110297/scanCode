@@ -289,10 +289,20 @@ export default {
         const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode')
         this.html5QrCode = new Html5Qrcode('scanner-video-container')
 
+        const container = document.getElementById('scanner-video-container')
+        const containerWidth = container ? container.clientWidth : 350
+        const containerHeight = container ? container.clientHeight : 400
+        // 扫描框占容器的80%，更大的扫描范围
+        const qrboxWidth = Math.floor(containerWidth * 0.85)
+        const qrboxHeight = Math.floor(containerHeight * 0.5)
+
         const config = {
-          fps: 10,
-          qrbox: { width: 250, height: 150 },
-          aspectRatio: 1.777778,
+          fps: 15,
+          qrbox: { width: qrboxWidth, height: qrboxHeight },
+          disableFlip: false,
+          experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true
+          },
           formatsToSupport: [
             Html5QrcodeSupportedFormats.CODE_128,
             Html5QrcodeSupportedFormats.CODE_39,
@@ -300,12 +310,14 @@ export default {
             Html5QrcodeSupportedFormats.EAN_8,
             Html5QrcodeSupportedFormats.QR_CODE,
             Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.CODABAR
           ]
         }
 
         await this.html5QrCode.start(
-          { facingMode: 'environment' },
+          { facingMode: { exact: 'environment' } },
           config,
           async (decodedText) => {
             console.log('扫描到条码:', decodedText)

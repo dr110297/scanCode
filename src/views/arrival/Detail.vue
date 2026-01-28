@@ -34,7 +34,7 @@
             <span class="value">{{ detailData && detailData.shipFee || '-' }}</span>
           </div>
           <div class="info-row">
-            <span class="label">货位</span>
+            <span class="label"><span class="required">*</span>货位</span>
             <el-select
               v-model="selectedGoodsLocationId"
               placeholder="请选择货位"
@@ -258,6 +258,11 @@ export default {
     async handleConfirmArrival() {
       if (!this.detailData) {
         this.showError('没有采购单数据')
+        return
+      }
+
+      if (!this.selectedGoodsLocationId) {
+        this.showError('请选择货位')
         return
       }
 
