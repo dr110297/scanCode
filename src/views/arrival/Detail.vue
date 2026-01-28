@@ -40,6 +40,8 @@
               placeholder="请选择货位"
               size="small"
               class="goods-location-select"
+              filterable
+              clearable
             >
               <el-option
                 v-for="item in goodsLocationList"
