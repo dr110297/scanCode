@@ -36,12 +36,29 @@ async function request(url, options = {}) {
   try {
     const response = await fetch(BASE_URL + url, config)
 
+    // 处理空响应或获取响应文本
+    const text = await response.text()
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      // 尝试解析错误响应体
+      let errorData = null
+      try {
+        errorData = text ? JSON.parse(text) : null
+      } catch (e) {
+        // 解析失败，使用原始文本
+      }
+      console.log(errorData)
+      // 如果响应体中有code字段，优先使用
+      if (errorData.error && errorData.error.code) {
+        throw new Error(errorData.error.code)
+      } else if (errorData.error && errorData.error.message) {
+        throw new Error(errorData.error.message)
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
     }
 
-    // 处理空响应
-    const text = await response.text()
+    // 处理成功响应
     if (!text) {
       return { success: true }
     }
