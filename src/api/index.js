@@ -11,7 +11,8 @@ const API_PATHS = {
   GET_PDA_LIST_PAGED: '/api/app/products/productsellfoxpurchaseorder/getpdalistpaged',
   GET_PURCHASE_ORDER: '/api/app/products/productsellfoxpurchaseorder/getpurchaseorderbyno',
   FBA_PURCHASE_ARRIVAL: '/api/app/products/productsellfoxpurchaseorder/fbapurchasearrival',
-  GET_DING_USER_INFO: '/api/app/users/user/getdingusersinfo'
+  GET_DING_USER_INFO: '/api/app/users/user/getdingusersinfo',
+  GET_GOODS_LOCATION_ALL: '/api/app/chains/chaingoodslocation/getall'
 }
 
 /**
@@ -94,9 +95,19 @@ export async function getDingUserInfo(code) {
   return request(url, { method: 'GET' })
 }
 
+/**
+ * 获取所有货位列表
+ */
+export async function getGoodsLocationAll() {
+  return request(API_PATHS.GET_GOODS_LOCATION_ALL, {
+    method: 'POST'
+  })
+}
+
 export default {
   getPdaListPaged,
   getPurchaseOrderByNo,
   fbaPurchaseArrival,
-  getDingUserInfo
+  getDingUserInfo,
+  getGoodsLocationAll
 }

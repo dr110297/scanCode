@@ -33,6 +33,22 @@
             <span class="label">运费</span>
             <span class="value">{{ detailData && detailData.shipFee || '-' }}</span>
           </div>
+          <div class="info-row">
+            <span class="label">货位</span>
+            <el-select
+              v-model="selectedGoodsLocationId"
+              placeholder="请选择货位"
+              size="small"
+              class="goods-location-select"
+            >
+              <el-option
+                v-for="item in goodsLocationList"
+                :key="item.id"
+                :label="item.goodsNumber"
+                :value="item.id"
+              />
+            </el-select>
+          </div>
         </div>
       </div>
 
@@ -146,7 +162,7 @@
 </template>
 
 <script>
-import { fbaPurchaseArrival } from '../../api'
+import { fbaPurchaseArrival, getGoodsLocationAll } from '../../api'
 import ImagePreview from '../../components/ImagePreview.vue'
 
 // 状态枚举: -3:草稿, 0:待下单, 1:待到货, 2:已完成, 3:已取消
@@ -172,7 +188,9 @@ export default {
       previewVisible: false,
       previewImages: [],
       previewIndex: 0,
-      hideCompleted: false
+      hideCompleted: false,
+      goodsLocationList: [],
+      selectedGoodsLocationId: null
     }
   },
   computed: {
@@ -198,6 +216,8 @@ export default {
     if (storedPreviousPage) {
       this.previousPage = storedPreviousPage
     }
+
+    this.loadGoodsLocationList()
   },
   watch: {
     detailData() {
@@ -221,6 +241,18 @@ export default {
           arrivalNum: 0,
           abnormalNum: 0
         }))
+      }
+    },
+    async loadGoodsLocationList() {
+      try {
+        const res = await getGoodsLocationAll()
+        if (res && res.items) {
+          this.goodsLocationList = res.items
+        } else if (Array.isArray(res)) {
+          this.goodsLocationList = res
+        }
+      } catch (error) {
+        console.error('获取货位列表失败:', error)
       }
     },
     async handleConfirmArrival() {
@@ -252,10 +284,13 @@ export default {
       }
 
       this.showLoading()
+      const selectedLocation = this.goodsLocationList.find(item => item.id === this.selectedGoodsLocationId)
       const params = {
         purchaseId: this.detailData.id || this.detailData.purchaseNo || '',
         wareHouseId: this.detailData.warehouseId || '',
         arrivalTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        goodsLocationId: this.selectedGoodsLocationId || '',
+        goodsLocationNumber: selectedLocation ? selectedLocation.goodsNumber : '',
         items: arrivalItems
       }
 
