@@ -23,6 +23,9 @@
           &times;
         </button>
       </div>
+      <button class="scan-icon-btn" @click="handleScan">
+        <span class="scan-icon"></span>
+      </button>
     </div>
 
     <!-- 列表容器 -->
@@ -56,9 +59,10 @@
               @click.stop="openPreview(item.skus, subIndex)"
             >
               <img
-                :src="subItem.mainImage"
+                :src="getThumbnailUrl(subItem.mainImage)"
                 :alt="'商品图片'"
                 referrerpolicy="no-referrer"
+                @error="handleImageError"
               />
               <span class="image-num">{{ subItem.quantity || 0 }}</span>
             </div>
@@ -82,6 +86,16 @@
         <div class="empty-state-icon">📦</div>
         <p>暂无打包数据</p>
       </div>
+    </div>
+
+    <!-- 扫码器遮罩 -->
+    <div v-if="isScanning" class="scanner-overlay">
+      <div class="scanner-header">
+        <button class="scanner-close-btn" @click="closeScannerOverlay">&times;</button>
+        <span>扫描条形码</span>
+      </div>
+      <div class="scanner-video-container" id="packing-scanner-video-container"></div>
+      <p class="scanner-tip">将条形码对准扫描框</p>
     </div>
 
     <!-- 图片预览 -->
@@ -126,7 +140,9 @@ export default {
       searchDebounceTimer: null,
       previewVisible: false,
       previewImages: [],
-      previewIndex: 0
+      previewIndex: 0,
+      isScanning: false,
+      html5QrCode: null
     }
   },
   mounted() {
@@ -143,8 +159,16 @@ export default {
     if (this.searchDebounceTimer) {
       clearTimeout(this.searchDebounceTimer)
     }
+    this.closeScannerOverlay()
   },
   methods: {
+    // 生成缩略图URL
+    getThumbnailUrl(url) {
+      if (!url) return ''
+      // 如果URL已经包含参数，使用&连接，否则使用?连接
+      const separator = url.includes('?') ? '&' : '?'
+      return `${url}${separator}imageView2/w/75/h/75`
+    },
     checkRefreshAndLoad() {
       if (sessionStorage.getItem('refreshPackingList') === 'true') {
         sessionStorage.removeItem('refreshPackingList')
@@ -255,6 +279,96 @@ export default {
       // 将当前数据存储到sessionStorage
       sessionStorage.setItem('packingItem', JSON.stringify(item))
     },
+    handleImageError(e) {
+      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCBmaWxsPSIjZjBmMGYwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2NjYyIgZm9udC1zaXplPSIxMiI+5Zu+54mH5Yqg6L295aSx6LSlPC90ZXh0Pjwvc3ZnPg=='
+    },
+    async handleScan() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        this.showError('当前浏览器不支持摄像头功能')
+        return
+      }
+
+      if (!window.isSecureContext) {
+        this.showError('请使用 HTTPS 协议访问本页面以启用摄像头功能')
+        return
+      }
+
+      await this.startCameraScanning()
+    },
+    async startCameraScanning() {
+      if (this.isScanning) return
+
+      try {
+        this.isScanning = true
+        await this.$nextTick()
+
+        const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode')
+        this.html5QrCode = new Html5Qrcode('packing-scanner-video-container')
+
+        const container = document.getElementById('packing-scanner-video-container')
+        const containerWidth = container ? container.clientWidth : 350
+        const containerHeight = container ? container.clientHeight : 400
+        const qrboxWidth = Math.floor(containerWidth * 0.85)
+        const qrboxHeight = Math.floor(containerHeight * 0.5)
+
+        const config = {
+          fps: 15,
+          qrbox: { width: qrboxWidth, height: qrboxHeight },
+          disableFlip: false,
+          experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true
+          },
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.CODABAR
+          ]
+        }
+
+        await this.html5QrCode.start(
+          { facingMode: { exact: 'environment' } },
+          config,
+          async (decodedText) => {
+            console.log('扫描到条码:', decodedText)
+            await this.closeScannerOverlay()
+            this.searchKeyword = decodedText
+            await this.handleSearch()
+          },
+          () => {}
+        )
+      } catch (error) {
+        console.error('摄像头访问失败:', error)
+        await this.closeScannerOverlay()
+
+        const errorMessages = {
+          NotAllowedError: '摄像头权限被拒绝，请在浏览器设置中允许访问摄像头',
+          NotFoundError: '未找到摄像头设备',
+          NotReadableError: '摄像头被其他应用占用'
+        }
+        this.showError(errorMessages[error.name] || '无法启动摄像头扫码')
+      }
+    },
+    async closeScannerOverlay() {
+      this.isScanning = false
+
+      if (this.html5QrCode) {
+        try {
+          const { Html5QrcodeScannerState } = await import('html5-qrcode')
+          if (this.html5QrCode.getState() === Html5QrcodeScannerState.SCANNING) {
+            await this.html5QrCode.stop()
+          }
+        } catch (e) {
+          console.log('停止扫描器时出错:', e)
+        }
+        this.html5QrCode = null
+      }
+    }
   }
 }
 </script>

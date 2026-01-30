@@ -45,7 +45,7 @@
           <div class="box-content">
             <!-- 箱规图片 -->
             <div v-if="box.imageUrl" class="box-image-preview">
-              <img :src="box.imageUrl" alt="箱规图片" />
+              <img :src="getThumbnailUrl(box.imageUrl)" alt="箱规图片" />
             </div>
             <!-- 箱规信息 -->
             <div class="box-info-wrapper">
@@ -109,6 +109,13 @@ export default {
     this.initData()
   },
   methods: {
+    // 生成缩略图URL
+    getThumbnailUrl(url) {
+      if (!url) return ''
+      // 如果URL已经包含参数，使用&连接，否则使用?连接
+      const separator = url.includes('?') ? '&' : '?'
+      return `${url}${separator}imageView2/w/75/h/75`
+    },
     async initData() {
       const packingItemStr = sessionStorage.getItem('packingItem')
       if (packingItemStr) {
