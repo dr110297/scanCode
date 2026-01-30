@@ -3,18 +3,20 @@
     <div class="header">
       <button class="back-btn" @click="goBack">&lt; 返回</button>
       <h1>箱规列表</h1>
-      <!-- 新建箱规按钮放在头部右侧 -->
-      <el-button
-        class="header-add-btn"
-        type="primary"
-        size="mini"
-        icon="el-icon-plus"
-        @click="addNewBox"
-      >新建</el-button>
     </div>
 
     <!-- 列表容器 -->
     <div class="list-container" ref="listContainer">
+      <!-- 新建按钮 -->
+      <div class="add-box-btn-wrapper">
+        <el-button
+          type="primary"
+          size="small"
+          icon="el-icon-plus"
+          @click="addNewBox"
+        >新建箱</el-button>
+      </div>
+
       <div class="list-content">
         <div
           v-for="(box, index) in boxList"
@@ -44,8 +46,8 @@
           <!-- 箱规内容区域：图片 + 信息 -->
           <div class="box-content">
             <!-- 箱规图片 -->
-            <div v-if="box.imageUrl" class="box-image-preview">
-              <img :src="getThumbnailUrl(box.imageUrl)" alt="箱规图片" />
+            <div v-if="getFirstImageUrl(box)" class="box-image-preview">
+              <img :src="getThumbnailUrl(getFirstImageUrl(box))" alt="箱规图片" />
             </div>
             <!-- 箱规信息 -->
             <div class="box-info-wrapper">
@@ -78,7 +80,7 @@
       <div v-if="boxList.length === 0" class="empty-state">
         <div class="empty-state-icon">📦</div>
         <p>暂无箱规数据</p>
-        <el-button type="primary" size="small" @click="addNewBox">新建箱规</el-button>
+        <el-button type="primary" size="small" @click="addNewBox">新建箱</el-button>
       </div>
     </div>
 
@@ -116,6 +118,19 @@ export default {
       const separator = url.includes('?') ? '&' : '?'
       return `${url}${separator}imageView2/w/75/h/75`
     },
+    // 获取第一张图片URL
+    getFirstImageUrl(box) {
+      if (!box.imageUrl && !box.imageUrls) return ''
+      // 如果是数组，取第一个
+      if (Array.isArray(box.imageUrls) && box.imageUrls.length > 0) {
+        return box.imageUrls[0]
+      }
+      // 如果是逗号分隔的字符串，取第一个
+      if (typeof box.imageUrl === 'string' && box.imageUrl) {
+        return box.imageUrl.split(',')[0]
+      }
+      return box.imageUrl || ''
+    },
     async initData() {
       const packingItemStr = sessionStorage.getItem('packingItem')
       if (packingItemStr) {
@@ -136,27 +151,40 @@ export default {
         const result = await getPlanBoxSize(this.$route.query.id)
         if (result && result.length > 0) {
           // 适配接口返回的数据结构
-          this.boxList = result.map(item => ({
-            id: item.id || '',
-            chainShipPlanItemId: item.chainShipPlanItemId || '',
-            imageUrl: item.imageUrl || '',
-            length: item.length || 0,
-            width: item.width || 0,
-            height: item.height || 0,
-            boxNum: item.boxNum || 0,
-            weight: item.weight || 0,
-            skuNum: item.skuNum || 0,
-            shippedQuantity: item.shippedQuantity || 0,
-            boxSizeItems: (item.boxSizeItems || []).map(sku => ({
-              id: sku.id || '',
-              boxSizeId: sku.boxSizeId || '',
-              sku: sku.sku || '',
-              productName: sku.productName || '',
-              shippedQuantity: sku.shippedQuantity || 0,
-              weight: sku.weight || 0,
-              quantity: sku.quantity || sku.shippedQuantity || 0
-            }))
-          }))
+          this.boxList = result.map(item => {
+            // 处理图片URL：优先使用imageUrls数组，否则将imageUrl字符串转换为数组
+            let imageUrls = []
+            if (Array.isArray(item.imageUrls)) {
+              imageUrls = item.imageUrls
+            } else if (item.imageUrl) {
+              imageUrls = typeof item.imageUrl === 'string'
+                ? item.imageUrl.split(',').filter(Boolean)
+                : []
+            }
+
+            return {
+              id: item.id || '',
+              chainShipPlanItemId: item.chainShipPlanItemId || '',
+              imageUrl: item.imageUrl || '',
+              imageUrls: imageUrls,
+              length: item.length || 0,
+              width: item.width || 0,
+              height: item.height || 0,
+              boxNum: item.boxNum || 0,
+              weight: item.weight || 0,
+              skuNum: item.skuNum || 0,
+              shippedQuantity: item.shippedQuantity || 0,
+              boxSizeItems: (item.boxSizeItems || []).map(sku => ({
+                id: sku.id || '',
+                boxSizeId: sku.boxSizeId || '',
+                sku: sku.sku || '',
+                productName: sku.productName || '',
+                shippedQuantity: sku.shippedQuantity || 0,
+                weight: sku.weight || 0,
+                quantity: sku.quantity || sku.shippedQuantity || 0
+              }))
+            }
+          })
           this.saveBoxList()
         } else {
           // 没有数据时创建一个空箱子
@@ -175,6 +203,7 @@ export default {
       return {
         tempId: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
         imageUrl: '',
+        imageUrls: [],
         length: 0,
         width: 0,
         height: 0,
@@ -304,12 +333,14 @@ export default {
 </script>
 
 <style scoped>
-/* 头部新建按钮 */
-.header-add-btn {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+/* 新建按钮容器 */
+.add-box-btn-wrapper {
+  padding: 10px 15px 0;
+  margin-bottom: 10px;
+}
+
+.add-box-btn-wrapper .el-button {
+  width: 100%;
 }
 
 /* 操作按钮组 */
