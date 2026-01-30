@@ -346,26 +346,34 @@ export default {
           ]
         }
 
-        // 请求更高分辨率的视频流
-        const cameraConfig = {
-          facingMode: { exact: 'environment' },
-          advanced: [{
-            focusMode: 'continuous',
-            zoom: 1.0
-          }]
+        // 尝试使用后置摄像头，如果失败则使用任意摄像头
+        try {
+          await this.html5QrCode.start(
+            { facingMode: 'environment' }, // 不使用 exact，提高兼容性
+            config,
+            async (decodedText) => {
+              console.log('扫描到条码:', decodedText)
+              await this.closeScannerOverlay()
+              this.searchKeyword = decodedText
+              await this.handleSearch()
+            },
+            () => {}
+          )
+        } catch (error) {
+          console.log('后置摄像头启动失败，尝试使用默认摄像头:', error)
+          // 降级：使用任意可用的摄像头
+          await this.html5QrCode.start(
+            { facingMode: 'user' },
+            config,
+            async (decodedText) => {
+              console.log('扫描到条码:', decodedText)
+              await this.closeScannerOverlay()
+              this.searchKeyword = decodedText
+              await this.handleSearch()
+            },
+            () => {}
+          )
         }
-
-        await this.html5QrCode.start(
-          cameraConfig,
-          config,
-          async (decodedText) => {
-            console.log('扫描到条码:', decodedText)
-            await this.closeScannerOverlay()
-            this.searchKeyword = decodedText
-            await this.handleSearch()
-          },
-          () => {}
-        )
       } catch (error) {
         console.error('摄像头访问失败:', error)
         await this.closeScannerOverlay()
