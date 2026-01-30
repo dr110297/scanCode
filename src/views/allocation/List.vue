@@ -53,10 +53,10 @@
           <!-- 第三行：商品图片列表 -->
           <div class="list-card-images">
             <div
-              v-for="(subItem, subIndex) in item.items"
+              v-for="(subItem, subIndex) in item.skus"
               :key="subIndex"
               class="image-item"
-              @click.stop="openPreview(item.items, subIndex)"
+              @click.stop="openPreview(item.skus, subIndex)"
             >
               <img
                 :src="getThumbnailUrl(subItem.mainImage)"
