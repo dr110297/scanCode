@@ -59,7 +59,7 @@
               @click.stop="openPreview(item.items, subIndex)"
             >
               <img
-                :src="subItem.mainImage"
+                :src="getThumbnailUrl(subItem.mainImage)"
                 :alt="'商品图片'"
                 referrerpolicy="no-referrer"
                 @error="handleImageError"
@@ -162,6 +162,13 @@ export default {
     this.closeScannerOverlay()
   },
   methods: {
+    // 生成缩略图URL
+    getThumbnailUrl(url) {
+      if (!url) return ''
+      // 如果URL已经包含参数，使用&连接，否则使用?连接
+      const separator = url.includes('?') ? '&' : '?'
+      return `${url}${separator}imageView2/w/75/h/75`
+    },
     checkRefreshAndLoad() {
       if (sessionStorage.getItem('refreshAllocationList') === 'true') {
         sessionStorage.removeItem('refreshAllocationList')
@@ -314,13 +321,15 @@ export default {
         const container = document.getElementById('allocation-scanner-video-container')
         const containerWidth = container ? container.clientWidth : 350
         const containerHeight = container ? container.clientHeight : 400
-        const qrboxWidth = Math.floor(containerWidth * 0.85)
-        const qrboxHeight = Math.floor(containerHeight * 0.5)
+        // 扫描框占容器的90%，更大的扫描范围
+        const qrboxWidth = Math.floor(containerWidth * 0.9)
+        const qrboxHeight = Math.floor(containerHeight * 0.6)
 
         const config = {
-          fps: 15,
+          fps: 30, // 提高帧率到30fps，提升扫描速度
           qrbox: { width: qrboxWidth, height: qrboxHeight },
-          disableFlip: false,
+          disableFlip: true, // 禁用镜像扫描，提升性能
+          aspectRatio: 1.777778, // 16:9 宽高比
           experimentalFeatures: {
             useBarCodeDetectorIfSupported: true
           },
@@ -337,8 +346,17 @@ export default {
           ]
         }
 
+        // 请求更高分辨率的视频流
+        const cameraConfig = {
+          facingMode: { exact: 'environment' },
+          advanced: [{
+            focusMode: 'continuous',
+            zoom: 1.0
+          }]
+        }
+
         await this.html5QrCode.start(
-          { facingMode: { exact: 'environment' } },
+          cameraConfig,
           config,
           async (decodedText) => {
             console.log('扫描到条码:', decodedText)
