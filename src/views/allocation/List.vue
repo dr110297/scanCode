@@ -202,8 +202,8 @@ export default {
           accountSiteIds: [],
           countrys: [],
           logisticTransportIds: [],
-          isSelfProduced: true,
-          hasExtraFee: true,
+          isSelfProduced: null,
+          hasExtraFee: null,
           contentSearches: {
             searchType: 0,
             content: this.searchKeyword || ''
