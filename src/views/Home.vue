@@ -9,10 +9,14 @@
           <div class="menu-icon arrival-icon"></div>
           <span>到货</span>
         </button>
-        <!-- <button class="menu-item" @click="goToReceive">
-          <div class="menu-icon receive-icon"></div>
-          <span>收货</span>
-        </button> -->
+        <button class="menu-item" @click="goToAllocation">
+          <div class="menu-icon allocation-icon"></div>
+          <span>配货</span>
+        </button>
+        <button class="menu-item" @click="goToPacking">
+          <div class="menu-icon packing-icon"></div>
+          <span>打包</span>
+        </button>
       </div>
     </div>
   </div>
@@ -25,15 +29,22 @@ export default {
     goToArrival() {
       this.$router.push('/arrival/list')
     },
-    goToReceive() {
-      this.$router.push('/receive/list')
+    goToAllocation() {
+      this.$router.push('/allocation/list')
+    },
+    goToPacking() {
+      this.$router.push('/packing/list')
     }
   }
 }
 </script>
 
 <style scoped>
-.menu-icon.receive-icon {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2352c41a'%3E%3Cpath d='M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z'/%3E%3C/svg%3E");
+.menu-icon.allocation-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234a90e2'%3E%3Cpath d='M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z'/%3E%3C/svg%3E");
+}
+
+.menu-icon.packing-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff9800'%3E%3Cpath d='M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z'/%3E%3C/svg%3E");
 }
 </style>

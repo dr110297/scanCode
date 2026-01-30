@@ -12,7 +12,14 @@ const API_PATHS = {
   GET_PURCHASE_ORDER: '/api/app/products/productsellfoxpurchaseorder/getpurchaseorderbyno',
   FBA_PURCHASE_ARRIVAL: '/api/app/products/productsellfoxpurchaseorder/fbapurchasearrival',
   GET_DING_USER_INFO: '/api/app/users/user/getdingusersinfo',
-  GET_GOODS_LOCATION_ALL: '/api/app/chains/chaingoodslocation/getall'
+  GET_GOODS_LOCATION_ALL: '/api/app/chains/chaingoodslocation/getall',
+  GET_DESIGNATED_STATUS_DATA: '/api/app/chains/chainshipplan/getdesignatedstatusdata',
+  CONFIRM_ALLOCATED: '/api/app/chains/chainshipplan/confirmallocated',
+  CONFIRM_PACKAGING: '/api/app/chains/chainshipplan/confirmpackaging',
+  GET_PLAN_BOX_SIZE: '/api/app/chains/chainshipplan/getplanboxsize',
+  CREATE_BOX_SIZE: '/api/app/chains/chainshipplan/createboxsize',
+  MODIFY_BOX_SIZE: '/api/app/chains/chainshipplan/modifyboxsize',
+  UPLOAD_IMAGES: '/api/app/chains/chainshipplan/uploadimages'
 }
 
 /**
@@ -121,10 +128,95 @@ export async function getGoodsLocationAll() {
   })
 }
 
+/**
+ * 获取指定状态的发货计划数据（配货/打包）
+ */
+export async function getDesignatedStatusData(params) {
+  return request(API_PATHS.GET_DESIGNATED_STATUS_DATA, {
+    method: 'POST',
+    body: JSON.stringify(params)
+  })
+}
+
+/**
+ * 确认配货
+ */
+export async function confirmAllocated(ids) {
+  return request(API_PATHS.CONFIRM_ALLOCATED, {
+    method: 'POST',
+    body: JSON.stringify(ids)
+  })
+}
+
+/**
+ * 确认打包
+ */
+export async function confirmPackaging(params) {
+  return request(API_PATHS.CONFIRM_PACKAGING, {
+    method: 'POST',
+    body: JSON.stringify(params)
+  })
+}
+
+/**
+ * 获取箱规列表
+ */
+export async function getPlanBoxSize(id) {
+  const url = `${API_PATHS.GET_PLAN_BOX_SIZE}?id=${encodeURIComponent(id)}`
+  return request(url, { method: 'GET' })
+}
+
+/**
+ * 创建箱规
+ */
+export async function createBoxSize(params) {
+  return request(API_PATHS.CREATE_BOX_SIZE, {
+    method: 'POST',
+    body: JSON.stringify(params)
+  })
+}
+
+/**
+ * 修改箱规
+ */
+export async function modifyBoxSize(params) {
+  return request(API_PATHS.MODIFY_BOX_SIZE, {
+    method: 'POST',
+    body: JSON.stringify(params)
+  })
+}
+
+/**
+ * 上传图片
+ */
+export async function uploadImages(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(BASE_URL + API_PATHS.UPLOAD_IMAGES, {
+    method: 'POST',
+    body: formData
+  })
+
+  if (!response.ok) {
+    throw new Error('图片上传失败')
+  }
+
+  const text = await response.text()
+  return text ? JSON.parse(text) : { success: true }
+}
+
 export default {
   getPdaListPaged,
   getPurchaseOrderByNo,
   fbaPurchaseArrival,
   getDingUserInfo,
-  getGoodsLocationAll
+  getGoodsLocationAll,
+  getDesignatedStatusData,
+  confirmAllocated,
+  confirmPackaging,
+  getPlanBoxSize,
+  createBoxSize,
+  modifyBoxSize,
+  uploadImages
 }

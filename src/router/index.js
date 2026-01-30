@@ -7,9 +7,13 @@ Vue.use(VueRouter)
 const ArrivalList = () => import('../views/arrival/List.vue')
 const ArrivalDetail = () => import('../views/arrival/Detail.vue')
 
-// 收货模块
-const ReceiveList = () => import('../views/receive/List.vue')
-const ReceiveDetail = () => import('../views/receive/Detail.vue')
+// 配货模块
+const AllocationList = () => import('../views/allocation/List.vue')
+
+// 打包模块
+const PackingList = () => import('../views/packing/List.vue')
+const BoxList = () => import('../views/packing/BoxList.vue')
+const BoxDetail = () => import('../views/packing/BoxDetail.vue')
 
 // 首页
 const Home = () => import('../views/Home.vue')
@@ -31,16 +35,27 @@ const routes = [
     name: 'ArrivalDetail',
     component: ArrivalDetail
   },
-  // 收货模块路由
+  // 配货模块路由
   {
-    path: '/receive/list',
-    name: 'ReceiveList',
-    component: ReceiveList
+    path: '/allocation/list',
+    name: 'AllocationList',
+    component: AllocationList
+  },
+  // 打包模块路由
+  {
+    path: '/packing/list',
+    name: 'PackingList',
+    component: PackingList
   },
   {
-    path: '/receive/detail',
-    name: 'ReceiveDetail',
-    component: ReceiveDetail
+    path: '/packing/box-list',
+    name: 'BoxList',
+    component: BoxList
+  },
+  {
+    path: '/packing/box-detail',
+    name: 'BoxDetail',
+    component: BoxDetail
   }
 ]
 
