@@ -50,16 +50,15 @@
           <!-- 第三行：商品图片列表 -->
           <div class="list-card-images">
             <div
-              v-for="(subItem, subIndex) in item.items"
+              v-for="(subItem, subIndex) in item.skus"
               :key="subIndex"
               class="image-item"
-              @click.stop="openPreview(item.items, subIndex)"
+              @click.stop="openPreview(item.skus, subIndex)"
             >
               <img
                 :src="subItem.mainImage"
                 :alt="'商品图片'"
                 referrerpolicy="no-referrer"
-                @error="handleImageError"
               />
               <span class="image-num">{{ subItem.quantity || 0 }}</span>
             </div>
@@ -256,9 +255,6 @@ export default {
       // 将当前数据存储到sessionStorage
       sessionStorage.setItem('packingItem', JSON.stringify(item))
     },
-    handleImageError(e) {
-      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCBmaWxsPSIjZjBmMGYwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2NjYyIgZm9udC1zaXplPSIxMiI+5Zu+54mH5Yqg6L295aSx6LSlPC90ZXh0Pjwvc3ZnPg=='
-    }
   }
 }
 </script>

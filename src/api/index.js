@@ -18,7 +18,8 @@ const API_PATHS = {
   CONFIRM_PACKAGING: '/api/app/chains/chainshipplan/confirmpackaging',
   GET_PLAN_BOX_SIZE: '/api/app/chains/chainshipplan/getplanboxsize',
   CREATE_BOX_SIZE: '/api/app/chains/chainshipplan/createboxsize',
-  MODIFY_BOX_SIZE: '/api/app/chains/chainshipplan/modifyboxsize',
+  MODIFY_BOX_SIZE: '/api/app/chains/chainshipplan/pdamodifyboxsize',
+  REMOVE_BOX_SIZE: '/api/app/chains/chainshipplan/removeboxsize',
   UPLOAD_IMAGES: '/api/app/chains/chainshipplan/uploadimages'
 }
 
@@ -187,6 +188,14 @@ export async function modifyBoxSize(params) {
 }
 
 /**
+ * 删除箱规
+ */
+export async function removeBoxSize(id) {
+  const url = `${API_PATHS.REMOVE_BOX_SIZE}?id=${encodeURIComponent(id)}`
+  return request(url, { method: 'GET' })
+}
+
+/**
  * 上传图片
  */
 export async function uploadImages(file) {
@@ -218,5 +227,6 @@ export default {
   getPlanBoxSize,
   createBoxSize,
   modifyBoxSize,
+  removeBoxSize,
   uploadImages
 }

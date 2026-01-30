@@ -41,21 +41,28 @@
               >删除</el-button>
             </div>
           </div>
-          <!-- 箱规图片 -->
-          <div v-if="box.imageUrl" class="box-image-preview">
-            <img :src="box.imageUrl" alt="箱规图片" />
+          <!-- 箱规内容区域：图片 + 信息 -->
+          <div class="box-content">
+            <!-- 箱规图片 -->
+            <div v-if="box.imageUrl" class="box-image-preview">
+              <img :src="box.imageUrl" alt="箱规图片" />
+            </div>
+            <!-- 箱规信息 -->
+            <div class="box-info-wrapper">
+              <div class="box-info-row">
+                <span class="info-label">尺寸：</span>
+                <span class="info-value">{{ box.length || 0 }} × {{ box.width || 0 }} × {{ box.height || 0 }} cm</span>
+              </div>
+              <div class="box-info-row">
+                <span class="info-label">重量：</span>
+                <span class="info-value">{{ box.weight || 0 }} kg</span>
+              </div>
+              <div class="box-info-row">
+                <span class="info-label">箱数：</span>
+                <span class="info-value">{{ box.boxNum || 0 }}</span>
+              </div>
+            </div>
           </div>
-          <!-- 第二行：箱规信息 -->
-          <div class="list-card-info">
-            <span class="info-item">尺寸：{{ box.length || 0 }} × {{ box.width || 0 }} × {{ box.height || 0 }} cm</span>
-          </div>
-          <div class="list-card-info">
-            <span class="info-item">箱数：{{ box.boxNum || 0 }}</span>
-            <span class="info-item">重量：{{ box.weight || 0 }} kg</span>
-          </div>
-          <!-- <div class="list-card-info">
-            <span class="info-item">发货数量：{{ box.shippedQuantity || 0 }}</span>
-          </div> -->
           <!-- 底部提示 -->
           <div class="card-tip">
             <span>
@@ -86,7 +93,7 @@
 </template>
 
 <script>
-import { confirmPackaging, getPlanBoxSize } from '../../api'
+import { confirmPackaging, getPlanBoxSize, removeBoxSize } from '../../api'
 
 export default {
   name: 'BoxList',
@@ -193,14 +200,47 @@ export default {
       this.saveBoxList()
       this.showSuccess('复制成功')
     },
-    deleteBox(index) {
+    async deleteBox(index) {
       if (this.boxList.length <= 1) {
         this.showError('至少保留一个箱子')
         return
       }
-      this.boxList.splice(index, 1)
-      this.saveBoxList()
-      this.showSuccess('删除成功')
+
+      // 弹出确认对话框
+      try {
+        await this.$confirm('确定要删除这个箱规吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+      } catch {
+        // 用户点击取消，直接返回
+        return
+      }
+
+      const box = this.boxList[index]
+
+      // 如果箱子有id，说明已保存到服务器，需要调用接口删除
+      if (box.id) {
+        this.showLoading()
+        try {
+          await removeBoxSize(box.id)
+          this.showSuccess('删除成功')
+          // 清除缓存并重新加载列表数据
+          sessionStorage.removeItem('boxList_' + this.$route.query.id)
+          await this.initData()
+        } catch (error) {
+          console.error('删除箱规失败:', error)
+          this.showError(error.message || '删除失败，请重试')
+        } finally {
+          this.hideLoading()
+        }
+      } else {
+        // 如果没有id，说明是未保存的新箱子，直接从数组中删除
+        this.boxList.splice(index, 1)
+        this.saveBoxList()
+        this.showSuccess('删除成功')
+      }
     },
     continueBox(index) {
       sessionStorage.setItem('currentBoxIndex', index.toString())
@@ -220,15 +260,23 @@ export default {
         return
       }
 
+      // 计算计划发货总数
+      const totalPlanQuantity = this.packingItem?.skus?.reduce((sum, sku) => sum + (sku.quantity || 0), 0) || 0
+
       this.showLoading()
       try {
         const params = [{
           id: this.$route.query.id,
-          packagingDto: this.boxList.map(box => ({
-            id: box.id || '',
-            useCount: box.boxNum || 0,
-            actualShipmentNum: box.shippedQuantity || 0
-          }))
+          packagingDto: this.boxList.map(box => {
+            // 计算当前箱规中所有SKU的实际发货数量总和
+            const actualShipmentNum = box.boxSizeItems.reduce((sum, sku) => sum + (sku.shippedQuantity || 0), 0)
+
+            return {
+              id: box.id || '',
+              useCount: totalPlanQuantity,
+              actualShipmentNum: actualShipmentNum
+            }
+          })
         }]
 
         await confirmPackaging(params)
@@ -276,19 +324,62 @@ export default {
   color: #c0c4cc;
 }
 
+/* 箱规内容区域 */
+.box-content {
+  display: flex;
+  padding: 12px 15px;
+  gap: 12px;
+  align-items: center;
+  min-height: 60px;
+}
+
 /* 箱规图片预览 */
 .box-image-preview {
-  padding: 8px 15px;
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f5f5f5;
   display: flex;
+  align-items: center;
   justify-content: center;
+  border: 1px solid #ebeef5;
 }
 
 .box-image-preview img {
-  max-width: 100%;
-  max-height: 120px;
-  border-radius: 6px;
-  object-fit: contain;
-  background: #f5f5f5;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 箱规信息区域 */
+.box-info-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.box-info-row {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  line-height: 1.5;
+  flex-wrap: wrap;
+}
+
+.info-label {
+  color: #909399;
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+.info-value {
+  color: #303133;
+  font-weight: 500;
+  margin-right: 8px;
 }
 
 /* 卡片信息行 */

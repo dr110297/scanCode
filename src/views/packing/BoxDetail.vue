@@ -77,27 +77,6 @@
           <span class="item-count">已选 {{ boxData.boxSizeItems.length }} 个</span>
         </div>
         <div class="card-body">
-          <!-- 发货数量统计 -->
-          <div class="quantity-stats">
-            <div class="stat-item">
-              <span class="stat-label">计划发货总数：</span>
-              <span class="stat-value">{{ totalQuantity }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">已填发货数量：</span>
-              <span class="stat-value" :class="{ 'over-limit': inputtedQuantity > totalQuantity }">
-                {{ inputtedQuantity }}
-              </span>
-              <span v-if="inputtedQuantity > totalQuantity" class="over-tip">（超出限制）</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">剩余可填数量：</span>
-              <span class="stat-value" :class="{ 'over-limit': remainingQuantity < 0 }">
-                {{ remainingQuantity }}
-              </span>
-            </div>
-          </div>
-
           <div class="sku-search-bar">
             <el-input
               v-model="skuSearchKeyword"
@@ -298,7 +277,7 @@ export default {
       this.showLoading()
       try {
         const result = await uploadImages(file)
-        this.boxData.imageUrl = result.url || result
+        this.boxData.imageUrl =  result[0]
         this.showSuccess('图片上传成功')
       } catch (error) {
         console.error('图片上传失败:', error)
@@ -373,11 +352,6 @@ export default {
         this.showError('请选择至少一个SKU')
         return
       }
-      // 验证发货数量不能超过总数
-      if (this.inputtedQuantity > this.totalQuantity) {
-        this.showError(`实际发货数量(${this.inputtedQuantity})不能超过计划发货总数(${this.totalQuantity})`)
-        return
-      }
 
       this.showLoading()
       try {
@@ -405,7 +379,7 @@ export default {
             })),
             id: this.boxData.id || ''
           }],
-          id: this.boxData.id || ''
+          // id: this.boxData.id || ''
         }
 
         if (this.isEdit && this.boxData.id) {
@@ -538,40 +512,6 @@ export default {
   color: #909399;
   font-size: 14px;
   flex-shrink: 0;
-}
-
-/* 发货数量统计 */
-.quantity-stats {
-  background: #f5f7fa;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 15px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  padding: 4px 0;
-  font-size: 13px;
-}
-
-.stat-label {
-  color: #909399;
-}
-
-.stat-value {
-  color: #409eff;
-  font-weight: 600;
-}
-
-.stat-value.over-limit {
-  color: #f56c6c;
-}
-
-.over-tip {
-  color: #f56c6c;
-  font-size: 12px;
-  margin-left: 4px;
 }
 
 /* SKU搜索栏 */
