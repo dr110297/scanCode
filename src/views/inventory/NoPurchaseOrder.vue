@@ -11,7 +11,7 @@
         <input
           type="text"
           v-model="searchKeyword"
-          placeholder="输入SKU、商品名称或货号搜索"
+          placeholder="输入SKU、商品名称或货位号搜索"
           @input="handleSearchInput"
           @keypress.enter="handleSearch"
         />
@@ -56,19 +56,19 @@
               {{ item.stocktakeNum > 0 ? '已盘点' : '待盘点' }}
             </div>
           </div>
-          <div class="list-card-body">
-            <div class="list-info-row">
-              <span class="list-label">SKU</span>
+          <div  class="list-info-row">
+            <span>
+              <span class="list-label">SKU：</span>
               <span class="list-value">{{ item.sku || '-' }}</span>
-            </div>
-            <div v-if="item.goodsNumber" class="list-info-row">
-              <span class="list-label">货号</span>
+            </span>
+            <span v-if="item.goodsNumber">
+              <span class="list-label">货位号：</span>
               <span class="list-value">{{ item.goodsNumber }}</span>
-            </div>
-            <div class="list-info-row">
-              <span class="list-label">盘点数量</span>
+            </span>
+            <span>
+              <span class="list-label">盘点数量：</span>
               <span class="list-value" style="color: #1890ff; font-weight: 500;">{{ item.stocktakeNum || 0 }}</span>
-            </div>
+            </span>
           </div>
         </div>
       </div>
@@ -105,7 +105,7 @@
           <input
             type="text"
             v-model="dialogSearchKeyword"
-            placeholder="输入SKU、商品名称或货号搜索"
+            placeholder="输入SKU、商品名称或货位号搜索"
             @input="handleDialogSearchInput"
           />
           <button
@@ -134,7 +134,7 @@
           <div class="sku-option-info">
             <div class="sku-option-name">{{ sku.productName || '-' }}</div>
             <div class="sku-option-code">SKU: {{ sku.sku || '-' }}</div>
-            <div v-if="sku.goodsNumber" class="sku-option-code">货号: {{ sku.goodsNumber }}</div>
+            <div v-if="sku.goodsNumber" class="sku-option-code">货位号: {{ sku.goodsNumber }}</div>
           </div>
           <div v-if="tempSelectedSku && tempSelectedSku.id === sku.id" class="sku-check-icon">
             <i class="el-icon-check"></i>

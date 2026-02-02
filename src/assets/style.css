@@ -347,7 +347,7 @@ html, body {
 
 .list-info-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
     padding: 6px 0;
 }
