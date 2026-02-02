@@ -231,16 +231,6 @@
       </span>
     </el-dialog>
 
-    <!-- SKU扫码器遮罩 -->
-    <div v-if="isSkuScanning" class="scanner-overlay">
-      <div class="scanner-header">
-        <button class="scanner-close-btn" @click="closeSkuScannerOverlay">&times;</button>
-        <span>扫描SKU条形码</span>
-      </div>
-      <div class="scanner-video-container" id="sku-scanner-video-container"></div>
-      <p class="scanner-tip">将条形码对准扫描框</p>
-    </div>
-
     <!-- 图片预览 -->
     <ImagePreview
       :visible.sync="previewVisible"
@@ -253,6 +243,7 @@
 <script>
 import { createBoxSize, modifyBoxSize, uploadImages } from '../../api'
 import ImagePreview from '../../components/ImagePreview.vue'
+import { scanAll } from '../../utils/scanner'
 
 export default {
   name: 'BoxDetail',
@@ -282,9 +273,7 @@ export default {
       skuSearchKeyword: '',
       showSkuSelector: false,
       availableSkus: [],
-      tempSelectedSkus: [],
-      isSkuScanning: false,
-      skuHtml5QrCode: null
+      tempSelectedSkus: []
     }
   },
   computed: {
@@ -315,9 +304,6 @@ export default {
   },
   mounted() {
     this.initData()
-  },
-  beforeDestroy() {
-    this.closeSkuScannerOverlay()
   },
   methods: {
     // 格式化小数输入，最多保留两位小数
@@ -581,95 +567,14 @@ export default {
       }
     },
     async handleSkuScan() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        this.showError('当前浏览器不支持摄像头功能')
-        return
-      }
-
-      if (!window.isSecureContext) {
-        this.showError('请使用 HTTPS 协议访问本页面以启用摄像头功能')
-        return
-      }
-
-      await this.startSkuScanning()
-    },
-    async startSkuScanning() {
-      if (this.isSkuScanning) return
-
       try {
-        this.isSkuScanning = true
-        await this.$nextTick()
-
-        const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode')
-        this.skuHtml5QrCode = new Html5Qrcode('sku-scanner-video-container', { verbose: false })
-
-        // 优化的扫描配置 - 全屏扫描
-        const config = {
-          fps: 15,
-          aspectRatio: 1.777778,
-          disableFlip: false,
-          formatsToSupport: [
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.ITF,
-            Html5QrcodeSupportedFormats.CODABAR
-          ]
+        const result = await scanAll()
+        if (result) {
+          this.skuSearchKeyword = result
+          this.searchSku()
         }
-
-        // 视频约束配置
-        const cameraConfig = {
-          facingMode: 'environment',
-          width: { min: 640, ideal: 1280, max: 1920 },
-          height: { min: 480, ideal: 720, max: 1080 }
-        }
-
-        if ('BarcodeDetector' in window) {
-          console.log('浏览器支持原生BarcodeDetector API，性能最佳')
-        }
-
-        await this.skuHtml5QrCode.start(
-          cameraConfig,
-          config,
-          async (decodedText) => {
-            console.log('扫描到SKU条码:', decodedText)
-            await this.closeSkuScannerOverlay()
-            this.skuSearchKeyword = decodedText
-            this.searchSku()
-          },
-          () => {}
-        )
-        console.log('摄像头已启动，解码器已自动选择最优可用后端')
       } catch (error) {
-        console.error('摄像头访问失败:', error)
-        await this.closeSkuScannerOverlay()
-
-        const errorMessages = {
-          NotAllowedError: '摄像头权限被拒绝，请在浏览器设置中允许访问摄像头',
-          NotFoundError: '未找到摄像头设备',
-          NotReadableError: '摄像头被其他应用占用',
-          OverconstrainedError: '摄像头不支持请求的配置'
-        }
-        this.showError(errorMessages[error.name] || '无法启动摄像头扫码: ' + error.message)
-      }
-    },
-    async closeSkuScannerOverlay() {
-      this.isSkuScanning = false
-
-      if (this.skuHtml5QrCode) {
-        try {
-          const { Html5QrcodeScannerState } = await import('html5-qrcode')
-          if (this.skuHtml5QrCode.getState() === Html5QrcodeScannerState.SCANNING) {
-            await this.skuHtml5QrCode.stop()
-          }
-        } catch (e) {
-          console.log('停止扫描器时出错:', e)
-        }
-        this.skuHtml5QrCode = null
+        this.showError(error.message || '扫码失败，请重试')
       }
     }
   }

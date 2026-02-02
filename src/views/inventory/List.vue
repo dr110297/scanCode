@@ -74,21 +74,12 @@
         <p>暂无盘点数据</p>
       </div>
     </div>
-
-    <!-- 扫码器遮罩 -->
-    <div v-if="isScanning" class="scanner-overlay">
-      <div class="scanner-header">
-        <button class="scanner-close-btn" @click="closeScannerOverlay">&times;</button>
-        <span>扫描条形码</span>
-      </div>
-      <div class="scanner-video-container" id="inventory-scanner-video-container"></div>
-      <p class="scanner-tip">将条形码对准扫描框</p>
-    </div>
   </div>
 </template>
 
 <script>
 import { getPurchaseOrderStockTake } from '../../api'
+import { scanAll } from '../../utils/scanner'
 
 // 状态枚举
 const STATUS_CLASS_MAP = {
@@ -115,9 +106,7 @@ export default {
       isLoadingMore: false,
       hasMoreData: true,
       searchKeyword: '',
-      searchDebounceTimer: null,
-      isScanning: false,
-      html5QrCode: null
+      searchDebounceTimer: null
     }
   },
   mounted() {
@@ -127,7 +116,6 @@ export default {
     if (this.searchDebounceTimer) {
       clearTimeout(this.searchDebounceTimer)
     }
-    this.closeScannerOverlay()
   },
   methods: {
     goBack() {
@@ -271,94 +259,13 @@ export default {
       }
     },
     async handleScan() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        this.showError('当前浏览器不支持摄像头功能')
-        return
-      }
-
-      if (!window.isSecureContext) {
-        this.showError('请使用 HTTPS 协议访问本页面以启用摄像头功能')
-        return
-      }
-
-      await this.startCameraScanning()
-    },
-    async startCameraScanning() {
-      if (this.isScanning) return
-
       try {
-        this.isScanning = true
-        await this.$nextTick()
-
-        const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode')
-        this.html5QrCode = new Html5Qrcode('inventory-scanner-video-container', { verbose: false })
-
-        // 优化的扫描配置 - 全屏扫描
-        const config = {
-          fps: 15,
-          aspectRatio: 1.777778,
-          disableFlip: false,
-          formatsToSupport: [
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.ITF,
-            Html5QrcodeSupportedFormats.CODABAR
-          ]
+        const result = await scanAll()
+        if (result) {
+          await this.handleScanResult(result)
         }
-
-        // 视频约束配置
-        const cameraConfig = {
-          facingMode: 'environment',
-          width: { min: 640, ideal: 1280, max: 1920 },
-          height: { min: 480, ideal: 720, max: 1080 }
-        }
-
-        if ('BarcodeDetector' in window) {
-          console.log('浏览器支持原生BarcodeDetector API，性能最佳')
-        }
-
-        await this.html5QrCode.start(
-          cameraConfig,
-          config,
-          async (decodedText) => {
-            console.log('扫描到条码:', decodedText)
-            await this.closeScannerOverlay()
-            await this.handleScanResult(decodedText)
-          },
-          () => {}
-        )
-        console.log('摄像头已启动，解码器已自动选择最优可用后端')
       } catch (error) {
-        console.error('摄像头访问失败:', error)
-        await this.closeScannerOverlay()
-
-        const errorMessages = {
-          NotAllowedError: '摄像头权限被拒绝，请在浏览器设置中允许访问摄像头',
-          NotFoundError: '未找到摄像头设备',
-          NotReadableError: '摄像头被其他应用占用',
-          OverconstrainedError: '摄像头不支持请求的配置'
-        }
-        this.showError(errorMessages[error.name] || '无法启动摄像头扫码: ' + error.message)
-      }
-    },
-    async closeScannerOverlay() {
-      this.isScanning = false
-
-      if (this.html5QrCode) {
-        try {
-          const { Html5QrcodeScannerState } = await import('html5-qrcode')
-          if (this.html5QrCode.getState() === Html5QrcodeScannerState.SCANNING) {
-            await this.html5QrCode.stop()
-          }
-        } catch (e) {
-          console.log('停止扫描器时出错:', e)
-        }
-        this.html5QrCode = null
+        this.showError(error.message || '扫码失败，请重试')
       }
     }
   }
