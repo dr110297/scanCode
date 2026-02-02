@@ -283,6 +283,12 @@ export default {
           ...item,
           stocktakeNum: item.stocktakeNum || 0
         }))
+
+        // 图片回显：从第一个有images的SKU中获取图片数据
+        const firstSkuWithImages = rawList.find(item => item.images && Array.isArray(item.images) && item.images.length > 0)
+        if (firstSkuWithImages) {
+          this.sharedImages = [...firstSkuWithImages.images]
+        }
       }
 
       // 货位选择逻辑
