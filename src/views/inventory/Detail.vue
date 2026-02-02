@@ -67,7 +67,7 @@
                 :key="index"
                 class="preview-image-item"
               >
-                <img :src="url" alt="盘点图片" @click="previewImage(index)" />
+                <img :src="getUploadThumbImage(url)" alt="盘点图片" @click="previewImage(index)" />
                 <el-button
                   type="danger"
                   icon="el-icon-delete"
@@ -347,6 +347,11 @@ export default {
       if (!imageUrl) return ''
       // 添加缩略图参数
       return imageUrl + '?imageView2/w/75/h/75'
+    },
+    // 上传图片区域的缩略图
+    getUploadThumbImage(imageUrl) {
+      if (!imageUrl) return ''
+      return imageUrl + '?x-oss-process=image/resize,m_pad,w_150,h_150,limit_0'
     },
     handleImageError(e) {
       e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCBmaWxsPSIjZjBmMGYwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2NjYyIgZm9udC1zaXplPSIxMiI+5Zu+54mH5Yqg6L295aSx6LSlPC90ZXh0Pjwvc3ZnPg=='

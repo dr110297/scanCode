@@ -85,7 +85,7 @@
         <div class="item-card-header">
           <img
             class="item-image"
-            :src="item.mainImage"
+            :src="getThumbImage(item.mainImage)"
             referrerpolicy="no-referrer"
             @click="openPreview(getOriginalIndex(item))"
             @error="handleImageError"
@@ -326,6 +326,11 @@ export default {
     getOriginalIndex(item) {
       if (!this.detailData || !this.detailData.items) return 0
       return this.detailData.items.findIndex(i => i.id === item.id)
+    },
+    getThumbImage(imageUrl) {
+      if (!imageUrl) return ''
+      // 添加缩略图参数
+      return imageUrl + '?imageView2/w/75/h/75'
     },
     handleImageError(e) {
       e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCBmaWxsPSIjZjBmMGYwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2NjYyIgZm9udC1zaXplPSIxMiI+5Zu+54mH5Yqg6L295aSx6LSlPC90ZXh0Pjwvc3ZnPg=='

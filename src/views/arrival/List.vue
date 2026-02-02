@@ -164,9 +164,8 @@ export default {
     // 生成缩略图URL
     getThumbnailUrl(url) {
       if (!url) return ''
-      // 如果URL已经包含参数，使用&连接，否则使用?连接
-      const separator = url.includes('?') ? '&' : '?'
-      return `${url}${separator}imageView2/w/75/h/75`
+      // 添加缩略图参数
+      return url + '?imageView2/w/75/h/75'
     },
     checkRefreshAndLoad() {
       if (sessionStorage.getItem('refreshList') === 'true') {
@@ -296,18 +295,9 @@ export default {
         const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode')
         this.html5QrCode = new Html5Qrcode('scanner-video-container')
 
-        const container = document.getElementById('scanner-video-container')
-        const containerWidth = container ? container.clientWidth : 350
-        const containerHeight = container ? container.clientHeight : 400
-        // 扫描框占容器的90%，更大的扫描范围
-        const qrboxWidth = Math.floor(containerWidth * 0.9)
-        const qrboxHeight = Math.floor(containerHeight * 0.6)
-
+        // 全屏扫描配置 - 不限制扫描区域，提高识别速度
         const config = {
-          fps: 30, // 提高帧率到30fps，提升扫描速度
-          qrbox: { width: qrboxWidth, height: qrboxHeight },
-          disableFlip: true, // 禁用镜像扫描，提升性能
-          aspectRatio: 1.777778, // 16:9 宽高比
+          fps: 10,
           experimentalFeatures: {
             useBarCodeDetectorIfSupported: true
           },
@@ -324,10 +314,18 @@ export default {
           ]
         }
 
-        // 尝试使用后置摄像头，如果失败则使用任意摄像头
+        // 高清摄像头配置，支持自动对焦
+        const cameraConfig = {
+          facingMode: 'environment',
+          width: { min: 640, ideal: 1920, max: 2560 },
+          height: { min: 480, ideal: 1080, max: 1440 },
+          focusMode: 'continuous',
+          advanced: [{ focusMode: 'continuous' }]
+        }
+
         try {
           await this.html5QrCode.start(
-            { facingMode: 'environment' }, // 不使用 exact，提高兼容性
+            cameraConfig,
             config,
             async (decodedText) => {
               console.log('扫描到条码:', decodedText)
@@ -337,10 +335,9 @@ export default {
             () => {}
           )
         } catch (error) {
-          console.log('后置摄像头启动失败，尝试使用默认摄像头:', error)
-          // 降级：使用任意可用的摄像头
+          console.log('高清摄像头启动失败，尝试使用默认配置:', error)
           await this.html5QrCode.start(
-            { facingMode: 'user' },
+            { facingMode: 'environment' },
             config,
             async (decodedText) => {
               console.log('扫描到条码:', decodedText)

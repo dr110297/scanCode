@@ -228,7 +228,7 @@ export default {
           shopIds: [],
           arrivalStatus: [],
           requisitionStatus: [],
-          stocktakeStatus: [1, 2],
+          stocktakeStatus: null,
           paidStatus: [],
           businessUserIds: [],
           timeSearches: {
@@ -293,17 +293,9 @@ export default {
         const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode')
         this.html5QrCode = new Html5Qrcode('inventory-scanner-video-container')
 
-        const container = document.getElementById('inventory-scanner-video-container')
-        const containerWidth = container ? container.clientWidth : 350
-        const containerHeight = container ? container.clientHeight : 400
-        const qrboxWidth = Math.floor(containerWidth * 0.9)
-        const qrboxHeight = Math.floor(containerHeight * 0.6)
-
+        // 全屏扫描配置 - 不限制扫描区域，提高识别速度
         const config = {
-          fps: 30,
-          qrbox: { width: qrboxWidth, height: qrboxHeight },
-          disableFlip: true,
-          aspectRatio: 1.777778,
+          fps: 10,
           experimentalFeatures: {
             useBarCodeDetectorIfSupported: true
           },
@@ -320,9 +312,18 @@ export default {
           ]
         }
 
+        // 高清摄像头配置，支持自动对焦
+        const cameraConfig = {
+          facingMode: 'environment',
+          width: { min: 640, ideal: 1920, max: 2560 },
+          height: { min: 480, ideal: 1080, max: 1440 },
+          focusMode: 'continuous',
+          advanced: [{ focusMode: 'continuous' }]
+        }
+
         try {
           await this.html5QrCode.start(
-            { facingMode: 'environment' },
+            cameraConfig,
             config,
             async (decodedText) => {
               console.log('扫描到条码:', decodedText)
@@ -332,12 +333,12 @@ export default {
             () => {}
           )
         } catch (error) {
-          console.log('后置摄像头启动失败，尝试使用默认摄像头:', error)
+          console.log('HD摄像头启动失败，尝试使用默认配置:', error)
           await this.html5QrCode.start(
-            { facingMode: 'user' },
+            { facingMode: 'environment' },
             config,
             async (decodedText) => {
-              console.log('扫描���条码:', decodedText)
+              console.log('扫描到条码:', decodedText)
               await this.closeScannerOverlay()
               await this.handleScanResult(decodedText)
             },

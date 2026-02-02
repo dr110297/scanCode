@@ -114,9 +114,8 @@ export default {
     // 生成缩略图URL
     getThumbnailUrl(url) {
       if (!url) return ''
-      // 如果URL已经包含参数，使用&连接，否则使用?连接
-      const separator = url.includes('?') ? '&' : '?'
-      return `${url}${separator}imageView2/w/75/h/75`
+      // 添加缩略图参数
+      return url + '?imageView2/w/75/h/75'
     },
     // 获取第一张图片URL
     getFirstImageUrl(box) {
