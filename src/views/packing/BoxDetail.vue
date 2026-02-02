@@ -603,9 +603,10 @@ export default {
         const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode')
         this.skuHtml5QrCode = new Html5Qrcode('sku-scanner-video-container')
 
-        // 全屏扫描配置 - 不限制扫描区域，提高识别速度
+        // 扫描配置 - 不设置qrbox让整个画面都可以识别条码
         const config = {
           fps: 10,
+          rememberLastUsedCamera: true,
           experimentalFeatures: {
             useBarCodeDetectorIfSupported: true
           },
@@ -622,29 +623,7 @@ export default {
           ]
         }
 
-        // 高清摄像头配置，支持自动对焦
-        const cameraConfig = {
-          facingMode: 'environment',
-          width: { min: 640, ideal: 1920, max: 2560 },
-          height: { min: 480, ideal: 1080, max: 1440 },
-          focusMode: 'continuous',
-          advanced: [{ focusMode: 'continuous' }]
-        }
-
         try {
-          await this.skuHtml5QrCode.start(
-            cameraConfig,
-            config,
-            async (decodedText) => {
-              console.log('扫描到SKU条码:', decodedText)
-              await this.closeSkuScannerOverlay()
-              this.skuSearchKeyword = decodedText
-              this.searchSku()
-            },
-            () => {}
-          )
-        } catch (error) {
-          console.log('高清摄像头启动失败，尝试使用默认配置:', error)
           await this.skuHtml5QrCode.start(
             { facingMode: 'environment' },
             config,
@@ -656,6 +635,23 @@ export default {
             },
             () => {}
           )
+        } catch (error) {
+          console.log('后置摄像头启动失败，尝试前置摄像头:', error)
+          try {
+            await this.skuHtml5QrCode.start(
+              { facingMode: 'user' },
+              config,
+              async (decodedText) => {
+                console.log('扫描到SKU条码:', decodedText)
+                await this.closeSkuScannerOverlay()
+                this.skuSearchKeyword = decodedText
+                this.searchSku()
+              },
+              () => {}
+            )
+          } catch (err) {
+            throw err
+          }
         }
       } catch (error) {
         console.error('摄像头访问失败:', error)
