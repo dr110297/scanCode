@@ -34,8 +34,6 @@
     <!-- 列表容器 -->
     <div class="list-container" ref="listContainer" @scroll="handleScroll">
       <div class="list-content">
-
-      <!-- 列表 -->
         <div
           v-for="item in listData"
           :key="item.id"
@@ -56,7 +54,7 @@
               {{ item.stocktakeNum > 0 ? '已盘点' : '待盘点' }}
             </div>
           </div>
-          <div  class="list-info-row">
+          <div class="list-info-row">
             <span>
               <span class="list-label">SKU：</span>
               <span class="list-value">{{ item.sku || '-' }}</span>
@@ -78,7 +76,7 @@
         <div class="loading-spinner-small"></div>
         <span>加载中...</span>
       </div>
-
+      
       <!-- 没有更多数据 -->
       <div v-if="!hasMoreData && listData.length > 0" class="no-more-data">
         <span>没有更多数据了</span>
@@ -91,9 +89,9 @@
       </div>
     </div>
 
-    <!-- SKU选择弹窗 -->
+    <!-- SKU选择弹窗（多选） -->
     <el-dialog
-      title="选择SKU"
+      title="选择SKU（可多选）"
       :visible.sync="showSkuSelector"
       width="90%"
       :close-on-click-modal="false"
@@ -117,14 +115,18 @@
           </button>
         </div>
       </div>
+      <div class="selected-count" v-if="tempSelectedSkus.length > 0">
+        已选择 {{ tempSelectedSkus.length }} 个SKU
+      </div>
       <div class="sku-options-list" ref="skuOptionsList" @scroll="handleSkuListScroll">
         <div
           v-for="sku in skuList"
           :key="sku.id"
           class="sku-option"
-          :class="{ selected: tempSelectedSku && tempSelectedSku.id === sku.id }"
-          @click="selectSku(sku)"
+          :class="{ selected: isSkuSelected(sku) }"
+          @click="toggleSkuSelection(sku)"
         >
+          <el-checkbox :value="isSkuSelected(sku)" @click.native.stop></el-checkbox>
           <img
             class="sku-option-image"
             :src="getThumbImage(sku.mainImage)"
@@ -135,9 +137,6 @@
             <div class="sku-option-name">{{ sku.productName || '-' }}</div>
             <div class="sku-option-code">SKU: {{ sku.sku || '-' }}</div>
             <div v-if="sku.goodsNumber" class="sku-option-code">货位号: {{ sku.goodsNumber }}</div>
-          </div>
-          <div v-if="tempSelectedSku && tempSelectedSku.id === sku.id" class="sku-check-icon">
-            <i class="el-icon-check"></i>
           </div>
         </div>
         <!-- 加载更多 -->
@@ -155,7 +154,7 @@
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button @click="closeSkuSelector">取消</el-button>
-        <el-button type="primary" @click="confirmSkuSelection">确定</el-button>
+        <el-button type="primary" @click="confirmSkuSelection">确定 ({{ tempSelectedSkus.length }})</el-button>
       </span>
     </el-dialog>
   </div>
@@ -182,7 +181,7 @@ export default {
       showSkuSelector: false,
       dialogSearchKeyword: '',
       skuList: [],
-      tempSelectedSku: null,
+      tempSelectedSkus: [], // 改为数组支持多选
       skuCurrentPage: 1,
       skuTotalCount: 0,
       hasMoreSku: true,
@@ -282,8 +281,14 @@ export default {
       this.searchKeyword = ''
       await this.handleSearch()
     },
+    // 点击列表项进入详情（单条）
     goToDetail(item) {
-      sessionStorage.setItem('noPurchaseOrderSkuData', JSON.stringify(item))
+      sessionStorage.setItem('noPurchaseOrderSkuList', JSON.stringify([item]))
+      this.$router.push('/inventory/no-purchase-order-detail')
+    },
+    // 多选后进入详情
+    goToDetailWithMultiple(items) {
+      sessionStorage.setItem('noPurchaseOrderSkuList', JSON.stringify(items))
       this.$router.push('/inventory/no-purchase-order-detail')
     },
     getThumbImage(imageUrl) {
@@ -296,7 +301,7 @@ export default {
     // SKU选择弹窗相关方法
     async openSkuSelector() {
       this.dialogSearchKeyword = ''
-      this.tempSelectedSku = null
+      this.tempSelectedSkus = []
       this.skuList = []
       this.skuCurrentPage = 1
       this.hasMoreSku = true
@@ -308,7 +313,7 @@ export default {
           categoryIds: [],
           platforms: [],
           isAvailable: null,
-          isStocktake: null,
+          isStocktake: false,
           timeSearches: {
             searchType: 0,
             beginTime: '',
@@ -338,8 +343,18 @@ export default {
         this.hideLoading()
       }
     },
-    selectSku(sku) {
-      this.tempSelectedSku = sku
+    // 检查SKU是否已选中
+    isSkuSelected(sku) {
+      return this.tempSelectedSkus.some(s => s.id === sku.id)
+    },
+    // 切换SKU选择状态
+    toggleSkuSelection(sku) {
+      const index = this.tempSelectedSkus.findIndex(s => s.id === sku.id)
+      if (index > -1) {
+        this.tempSelectedSkus.splice(index, 1)
+      } else {
+        this.tempSelectedSkus.push({ ...sku })
+      }
     },
     handleDialogSearchInput() {
       clearTimeout(this.dialogSearchTimer)
@@ -357,7 +372,7 @@ export default {
           categoryIds: [],
           platforms: [],
           isAvailable: null,
-          isStocktake: null,
+          isStocktake: false,
           timeSearches: {
             searchType: 0,
             beginTime: '',
@@ -409,7 +424,7 @@ export default {
           categoryIds: [],
           platforms: [],
           isAvailable: null,
-          isStocktake: null,
+          isStocktake: false,
           timeSearches: {
             searchType: 0,
             beginTime: '',
@@ -437,60 +452,20 @@ export default {
         this.isLoadingMoreSku = false
       }
     },
-    async confirmSkuSelection() {
-      if (!this.tempSelectedSku) {
-        this.showError('请选择一个SKU')
+    confirmSkuSelection() {
+      if (this.tempSelectedSkus.length === 0) {
+        this.showError('请至少选择一个SKU')
         return
       }
 
-      // 先保存选中的 SKU 数据，因为 closeSkuSelector 会清空 tempSelectedSku
-      const selectedSku = { ...this.tempSelectedSku }
-
-      this.showLoading()
-      try {
-        const params = {
-          status: null,
-          categoryIds: [],
-          platforms: [],
-          isAvailable: null,
-          isStocktake: null,
-          timeSearches: {
-            searchType: 0,
-            beginTime: '',
-            endTime: ''
-          },
-          contentSearches: {
-            searchType: 0,
-            content: selectedSku.sku || ''
-          },
-          sorting: '',
-          skipCount: 1,
-          maxResultCount: 25
-        }
-
-        const result = await getCommodityStockTake(params)
-        this.closeSkuSelector()
-
-        if (result && result.items && result.items.length > 0) {
-          // 找到匹配的 SKU 数据
-          const matchedItem = result.items.find(item => item.id === selectedSku.id) || result.items[0]
-          this.goToDetail(matchedItem)
-        } else {
-          // 如果没有找到匹配数据，使用原始数据
-          this.goToDetail(selectedSku)
-        }
-      } catch (error) {
-        console.error('获取SKU数据失败:', error)
-        this.closeSkuSelector()
-        // 出错时使用原始数据
-        this.goToDetail(selectedSku)
-      } finally {
-        this.hideLoading()
-      }
+      // 先保存选中的数据，再关闭弹窗（closeSkuSelector会清空tempSelectedSkus）
+      const selectedItems = [...this.tempSelectedSkus]
+      this.closeSkuSelector()
+      this.goToDetailWithMultiple(selectedItems)
     },
     closeSkuSelector() {
       this.showSkuSelector = false
-      this.tempSelectedSku = null
+      this.tempSelectedSkus = []
       this.dialogSearchKeyword = ''
     },
     // 扫码相关方法
@@ -596,7 +571,7 @@ export default {
 
 /* SKU选择弹窗样式 */
 .dialog-search-bar {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .dialog-search-bar .search-input-wrapper {
@@ -621,6 +596,15 @@ export default {
   right: 8px;
 }
 
+.selected-count {
+  font-size: 13px;
+  color: #409eff;
+  margin-bottom: 10px;
+  padding: 6px 12px;
+  background: #ecf5ff;
+  border-radius: 4px;
+}
+
 .sku-options-list {
   max-height: 400px;
   overflow-y: auto;
@@ -634,6 +618,7 @@ export default {
   border-bottom: 1px solid #f0f0f0;
   cursor: pointer;
   transition: background 0.2s;
+  gap: 10px;
 }
 
 .sku-option:last-child {
@@ -653,7 +638,6 @@ export default {
   height: 50px;
   object-fit: cover;
   border-radius: 6px;
-  margin-right: 12px;
   background: #f5f5f5;
   flex-shrink: 0;
 }
@@ -676,19 +660,5 @@ export default {
   font-size: 12px;
   color: #999;
   margin-top: 2px;
-}
-
-.sku-check-icon {
-  width: 24px;
-  height: 24px;
-  background: #1890ff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 14px;
-  flex-shrink: 0;
-  margin-left: 10px;
 }
 </style>

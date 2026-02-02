@@ -55,7 +55,7 @@
       <!-- 图片上传区域 -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">盘点图片（最多5张）</span>
+          <span class="card-title"><span class="required">*</span>盘点图片（最多5张）</span>
           <span class="image-count">{{ uploadedImages.length }}/5</span>
         </div>
         <div class="card-body">
@@ -369,6 +369,12 @@ export default {
 
       if (!this.selectedGoodsLocationId) {
         this.showError('请选择货位')
+        return
+      }
+
+      // 验证盘点图片
+      if (this.uploadedImages.length === 0) {
+        this.showError('请上传盘点图片')
         return
       }
 
