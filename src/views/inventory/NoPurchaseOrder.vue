@@ -499,10 +499,46 @@ export default {
         const result = await scanAll()
         if (result) {
           this.searchKeyword = result
-          this.handleSearch()
+          await this.handleScanSearch(result)
         }
       } catch (error) {
         this.showError(error.message || '扫码失败，请重试')
+      }
+    },
+    // 扫码搜索 - isStocktake 传 null
+    async handleScanSearch(keyword) {
+      this.showLoading()
+      try {
+        const params = {
+          status: null,
+          categoryIds: [],
+          platforms: [],
+          isAvailable: null,
+          isStocktake: null,
+          timeSearches: {
+            searchType: 0,
+            beginTime: '',
+            endTime: ''
+          },
+          contentSearches: {
+            searchType: 0,
+            content: keyword || ''
+          },
+          sorting: '',
+          skipCount: 1,
+          maxResultCount: PAGE_SIZE
+        }
+
+        const result = await getCommodityStockTake(params)
+        this.totalCount = result.totalCount || 0
+        this.listData = result.items || []
+        this.hasMoreData = this.listData.length < this.totalCount
+        this.currentPage = 2
+      } catch (error) {
+        console.error('扫码搜索失败:', error)
+        this.showError('搜索失败，请重试')
+      } finally {
+        this.hideLoading()
       }
     }
   }
