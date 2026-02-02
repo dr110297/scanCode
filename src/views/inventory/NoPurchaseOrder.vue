@@ -114,8 +114,9 @@
         <div class="item-card-header">
           <img
             class="item-image"
-            :src="selectedSku.mainImage"
+            :src="getThumbImage(selectedSku.mainImage)"
             referrerpolicy="no-referrer"
+            @click="openSkuImagePreview"
             @error="handleImageError"
           />
           <div class="item-basic-info">
@@ -175,7 +176,7 @@
           @clear="handleDialogSearchClear"
         />
       </div>
-      <div class="sku-options-list">
+      <div class="sku-options-list" ref="skuOptionsList" @scroll="handleSkuListScroll">
         <div
           v-for="sku in skuList"
           :key="sku.id"
@@ -185,7 +186,7 @@
         >
           <img
             class="sku-option-image"
-            :src="sku.mainImage"
+            :src="getThumbImage(sku.mainImage)"
             referrerpolicy="no-referrer"
             @error="handleImageError"
           />
@@ -195,7 +196,16 @@
           </div>
           <!-- <el-radio :value="tempSelectedSku && tempSelectedSku.id === sku.id"></el-radio> -->
         </div>
-        <div v-if="skuList.length === 0" class="empty-state">
+        <!-- 加载更多 -->
+        <div v-if="isLoadingMoreSku" class="loading-more">
+          <i class="el-icon-loading"></i>
+          <span>加载中...</span>
+        </div>
+        <!-- 没有更多数据 -->
+        <div v-if="!hasMoreSku && skuList.length > 0" class="no-more-data">
+          <span>没有更多数据了</span>
+        </div>
+        <div v-if="skuList.length === 0 && !isLoadingMoreSku" class="empty-state">
           <p>{{ dialogSearchKeyword ? '未找到匹配的SKU' : '暂无可选SKU' }}</p>
         </div>
       </div>
@@ -250,7 +260,11 @@ export default {
       previewVisible: false,
       previewImages: [],
       previewIndex: 0,
-      dialogSearchTimer: null
+      dialogSearchTimer: null,
+      skuCurrentPage: 1,
+      skuTotalCount: 0,
+      hasMoreSku: true,
+      isLoadingMoreSku: false
     }
   },
   computed: {
@@ -330,6 +344,10 @@ export default {
     async openSkuSelector() {
       this.dialogSearchKeyword = ''
       this.tempSelectedSku = null
+      this.skuList = []
+      this.skuCurrentPage = 1
+      this.hasMoreSku = true
+      this.skuTotalCount = 0
       this.showLoading()
       try {
         const params = {
@@ -355,6 +373,9 @@ export default {
         const result = await getCommodityStockTake(params)
         if (result && result.items) {
           this.skuList = result.items
+          this.skuTotalCount = result.totalCount || 0
+          this.hasMoreSku = this.skuList.length < this.skuTotalCount
+          this.skuCurrentPage = 2
           this.showSkuSelector = true
         }
       } catch (error) {
@@ -374,6 +395,9 @@ export default {
       }, 500)
     },
     async handleDialogSearch() {
+      this.skuCurrentPage = 1
+      this.hasMoreSku = true
+      this.skuTotalCount = 0
       try {
         const params = {
           status: null,
@@ -398,6 +422,9 @@ export default {
         const result = await getCommodityStockTake(params)
         if (result && result.items) {
           this.skuList = result.items
+          this.skuTotalCount = result.totalCount || 0
+          this.hasMoreSku = this.skuList.length < this.skuTotalCount
+          this.skuCurrentPage = 2
         }
       } catch (error) {
         console.error('搜索SKU失败:', error)
@@ -407,6 +434,72 @@ export default {
     async handleDialogSearchClear() {
       this.dialogSearchKeyword = ''
       await this.handleDialogSearch()
+    },
+    handleSkuListScroll() {
+      if (this.isLoadingMoreSku || !this.hasMoreSku) return
+
+      const container = this.$refs.skuOptionsList
+      if (!container) return
+
+      const { scrollTop, scrollHeight, clientHeight } = container
+      if (scrollTop + clientHeight >= scrollHeight - 50) {
+        this.loadMoreSkus()
+      }
+    },
+    async loadMoreSkus() {
+      if (this.isLoadingMoreSku || !this.hasMoreSku) return
+
+      this.isLoadingMoreSku = true
+      try {
+        const params = {
+          status: null,
+          categoryIds: [],
+          platforms: [],
+          isAvailable: null,
+          isStocktake: null,
+          timeSearches: {
+            searchType: 0,
+            beginTime: '',
+            endTime: ''
+          },
+          contentSearches: {
+            searchType: 0,
+            content: this.dialogSearchKeyword || ''
+          },
+          sorting: '',
+          skipCount: this.skuCurrentPage,
+          maxResultCount: 25
+        }
+
+        const result = await getCommodityStockTake(params)
+        if (result && result.items) {
+          this.skuList = [...this.skuList, ...result.items]
+          this.skuTotalCount = result.totalCount || 0
+          this.hasMoreSku = this.skuList.length < this.skuTotalCount
+          this.skuCurrentPage++
+        }
+      } catch (error) {
+        console.error('加载更多SKU失败:', error)
+      } finally {
+        this.isLoadingMoreSku = false
+      }
+    },
+    getThumbImage(imageUrl) {
+      if (!imageUrl) return ''
+      // 添加缩略图参数
+      return imageUrl + '?imageView2/w/75/h/75'
+    },
+    getOriginalImage(imageUrl) {
+      if (!imageUrl) return ''
+      // 移除缩略图参数，返回原图
+      return imageUrl.replace(/\?imageView2\/w\/\d+\/h\/\d+$/, '')
+    },
+    openSkuImagePreview() {
+      if (this.selectedSku && this.selectedSku.mainImage) {
+        this.previewImages = [this.getOriginalImage(this.selectedSku.mainImage)]
+        this.previewIndex = 0
+        this.previewVisible = true
+      }
     },
     confirmSkuSelection() {
       if (!this.tempSelectedSku) {
@@ -873,5 +966,27 @@ export default {
 .empty-state p {
   font-size: 14px;
   color: #909399;
+}
+
+/* 加载更多 */
+.loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  color: #909399;
+  font-size: 13px;
+}
+
+.loading-more i {
+  margin-right: 8px;
+}
+
+/* 没有更多数据 */
+.no-more-data {
+  text-align: center;
+  padding: 15px;
+  color: #c0c4cc;
+  font-size: 13px;
 }
 </style>

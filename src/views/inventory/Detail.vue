@@ -21,15 +21,15 @@
           </div>
           <div class="info-row">
             <span class="label">业务人员</span>
-            <span class="value">{{ detailData && detailData.belongsUserName || '-' }}</span>
+            <span class="value">{{ detailData && detailData.businessUserName || '-' }}</span>
           </div>
           <div class="info-row">
             <span class="label">采购方</span>
-            <span class="value">{{ detailData && detailData.purchaserName || '-' }}</span>
+            <span class="value">{{ detailData && detailData.purchaseUserName || '-' }}</span>
           </div>
           <div class="info-row">
             <span class="label">运费</span>
-            <span class="value">{{ detailData && detailData.shipFee || '-' }}</span>
+            <span class="value">{{ detailData && detailData.shipFee}}</span>
           </div>
           <div class="info-row">
             <span class="label"><span class="required">*</span>货位</span>
@@ -122,7 +122,7 @@
         <div class="item-card-header">
           <img
             class="item-image"
-            :src="item.mainImage"
+            :src="getThumbImage(item.mainImage)"
             referrerpolicy="no-referrer"
             @click="openPreview(getOriginalIndex(item))"
             @error="handleImageError"
@@ -333,6 +333,7 @@ export default {
     },
     openPreview(index) {
       if (this.detailData && this.detailData.items) {
+        // 预览时使用原图（不带缩略图参数）
         this.previewImages = this.detailData.items.map(item => item.mainImage).filter(Boolean)
         this.previewIndex = index
         this.previewVisible = true
@@ -341,6 +342,11 @@ export default {
     getOriginalIndex(item) {
       if (!this.detailData || !this.detailData.items) return 0
       return this.detailData.items.findIndex(i => i.id === item.id)
+    },
+    getThumbImage(imageUrl) {
+      if (!imageUrl) return ''
+      // 添加缩略图参数
+      return imageUrl + '?imageView2/w/75/h/75'
     },
     handleImageError(e) {
       e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCBmaWxsPSIjZjBmMGYwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2NjYyIgZm9udC1zaXplPSIxMiI+5Zu+54mH5Yqg6L295aSx6LSlPC90ZXh0Pjwvc3ZnPg=='

@@ -150,7 +150,7 @@ export default {
           shopIds: [],
           arrivalStatus: [],
           requisitionStatus: [],
-          stocktakeStatus: null,
+          stocktakeStatus: [1,2],
           paidStatus: [],
           businessUserIds: [],
           timeSearches: {
@@ -221,6 +221,55 @@ export default {
         query: { purchaseNo: item.purchaseNo }
       })
     },
+    async handleScanResult(decodedText) {
+      this.showLoading()
+      try {
+        const params = {
+          shopIds: [],
+          arrivalStatus: [],
+          requisitionStatus: [],
+          stocktakeStatus: [1, 2],
+          paidStatus: [],
+          businessUserIds: [],
+          timeSearches: {
+            searchType: 0,
+            beginTime: '',
+            endTime: ''
+          },
+          contentSearches: {
+            searchType: 0,
+            content: decodedText
+          },
+          sorting: '',
+          skipCount: 1,
+          maxResultCount: 25
+        }
+
+        const result = await getPurchaseOrderStockTake(params)
+        const items = result.items || []
+
+        if (items.length === 1) {
+          // 找到唯一匹配项，直接进入详情页
+          this.goToDetail(items[0])
+        } else if (items.length > 1) {
+          // 多个匹配项，显示在列表中
+          this.searchKeyword = decodedText
+          this.listData = items
+          this.totalCount = result.totalCount || 0
+          this.hasMoreData = this.listData.length < this.totalCount
+          this.currentPage = 2
+          this.showSuccess(`找到${items.length}条匹配数据，请选择`)
+        } else {
+          // 没有找到匹配项
+          this.showError('未找到匹配的采购单')
+        }
+      } catch (error) {
+        console.error('扫码搜索失败:', error)
+        this.showError(error.message || '搜索失败，请重试')
+      } finally {
+        this.hideLoading()
+      }
+    },
     async handleScan() {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         this.showError('当前浏览器不支持摄像头功能')
@@ -278,8 +327,7 @@ export default {
             async (decodedText) => {
               console.log('扫描到条码:', decodedText)
               await this.closeScannerOverlay()
-              this.searchKeyword = decodedText
-              await this.handleSearch()
+              await this.handleScanResult(decodedText)
             },
             () => {}
           )
@@ -289,10 +337,9 @@ export default {
             { facingMode: 'user' },
             config,
             async (decodedText) => {
-              console.log('扫描到条码:', decodedText)
+              console.log('扫描���条码:', decodedText)
               await this.closeScannerOverlay()
-              this.searchKeyword = decodedText
-              await this.handleSearch()
+              await this.handleScanResult(decodedText)
             },
             () => {}
           )
