@@ -51,6 +51,14 @@
               />
             </el-select>
           </div>
+          <div class="info-row">
+            <span class="label">到货箱数</span>
+            <el-input-number
+              v-model="arrivalBoxes"
+              :min="0"
+              placeholder="请输入"
+            />
+          </div>
         </div>
       </div>
 
@@ -164,7 +172,7 @@
 </template>
 
 <script>
-import { fbaPurchaseArrival, getGoodsLocationAll } from '../../api'
+import { fbaPurchaseArrival } from '../../api'
 import ImagePreview from '../../components/ImagePreview.vue'
 
 // 状态枚举: -3:草稿, 0:待下单, 1:待到货, 2:已完成, 3:已取消
@@ -181,7 +189,7 @@ export default {
   components: {
     ImagePreview
   },
-  inject: ['showLoading', 'hideLoading', 'showError', 'showSuccess'],
+  inject: ['showLoading', 'hideLoading', 'showError', 'showSuccess', 'getGoodsLocationList'],
   data() {
     return {
       detailData: null,
@@ -191,11 +199,14 @@ export default {
       previewImages: [],
       previewIndex: 0,
       hideCompleted: false,
-      goodsLocationList: [],
-      selectedGoodsLocationId: null
+      selectedGoodsLocationId: null,
+      arrivalBoxes: null
     }
   },
   computed: {
+    goodsLocationList() {
+      return this.getGoodsLocationList()
+    },
     filteredItems() {
       if (!this.detailData || !this.detailData.items) return []
       if (!this.hideCompleted) return this.detailData.items
@@ -213,13 +224,15 @@ export default {
     if (storedData) {
       this.detailData = JSON.parse(storedData)
       this.initArrivalInputs()
+      // 回显到货箱数
+      if (this.detailData.arrivalBoxes !== undefined && this.detailData.arrivalBoxes !== null) {
+        this.arrivalBoxes = this.detailData.arrivalBoxes
+      }
     }
 
     if (storedPreviousPage) {
       this.previousPage = storedPreviousPage
     }
-
-    this.loadGoodsLocationList()
   },
   watch: {
     detailData() {
@@ -243,18 +256,6 @@ export default {
           arrivalNum: 0,
           abnormalNum: 0
         }))
-      }
-    },
-    async loadGoodsLocationList() {
-      try {
-        const res = await getGoodsLocationAll()
-        if (res && res.items) {
-          this.goodsLocationList = res.items
-        } else if (Array.isArray(res)) {
-          this.goodsLocationList = res
-        }
-      } catch (error) {
-        console.error('获取货位列表失败:', error)
       }
     },
     async handleConfirmArrival() {
@@ -298,6 +299,7 @@ export default {
         arrivalTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
         goodsLocationId: this.selectedGoodsLocationId || '',
         goodsLocationNumber: selectedLocation ? selectedLocation.goodsNumber : '',
+        arrivalBoxes: this.arrivalBoxes || 0,
         items: arrivalItems
       }
 
@@ -331,3 +333,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.arrival-boxes-input {
+  width: 100%;
+}
+</style>

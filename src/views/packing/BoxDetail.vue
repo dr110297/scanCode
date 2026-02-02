@@ -149,7 +149,12 @@
               <div class="sku-header">
                 <div class="sku-info">
                   <div class="sku-name">{{ sku.productName || '-' }}</div>
-                  <div class="sku-code">SKU: {{ sku.sku || '-' }} | 计划数量: {{ sku.quantity || 0 }}</div>
+                  <div class="sku-code">
+                    SKU: {{ sku.sku || '-' }} 
+                    <span style="margin: 0 10px;">|</span>
+                    数量: {{ getOriginalQuantity(sku) }} 
+                    <span style="margin: 0 10px;">|</span>
+                    占用数量: {{ sku.useCount || 0 }}</div>
                 </div>
                 <el-button type="text" icon="el-icon-delete" class="delete-btn" @click="removeSku(sku)"></el-button>
               </div>
@@ -206,9 +211,15 @@
         >
           <div class="sku-option-info">
             <div class="sku-option-name">{{ sku.productName || '-' }}</div>
-            <div class="sku-option-code">SKU: {{ sku.sku || '-' }} | 数量: {{ sku.quantity || 0 }}</div>
+            <div class="sku-option-code">
+              SKU: {{ sku.sku || '-' }} 
+              <span style="margin: 0 10px;">|</span>
+              数量: {{ sku.quantity || 0 }}
+              <span style="margin: 0 10px;">|</span>
+              占用数量: {{ sku.useCount || 0 }}
+            </div>
           </div>
-          <el-checkbox :value="isSkuSelected(sku)" @click.native.stop="toggleSkuSelection(sku)"></el-checkbox>
+          <el-checkbox :value="isSkuSelected(sku)" @change="toggleSkuSelection(sku)"></el-checkbox>
         </div>
         <div v-if="availableSkus.length === 0" class="empty-state">
           <p>暂无可选SKU</p>
@@ -420,6 +431,16 @@ export default {
         }
         return s.sku === sku.sku
       })
+    },
+    getOriginalQuantity(sku) {
+      // 从 availableSkus 中查找原始的 quantity
+      const originalSku = this.availableSkus.find(s => {
+        if (s.id && sku.id) {
+          return s.id === sku.id
+        }
+        return s.sku === sku.sku
+      })
+      return originalSku ? originalSku.quantity : (sku.quantity || 0)
     },
     toggleSkuSelection(sku) {
       const index = this.tempSelectedSkus.findIndex(s => {

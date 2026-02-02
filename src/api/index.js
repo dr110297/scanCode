@@ -20,7 +20,12 @@ const API_PATHS = {
   CREATE_BOX_SIZE: '/api/app/chains/chainshipplan/createboxsize',
   MODIFY_BOX_SIZE: '/api/app/chains/chainshipplan/pdamodifyboxsize',
   REMOVE_BOX_SIZE: '/api/app/chains/chainshipplan/removeboxsize',
-  UPLOAD_IMAGES: '/api/app/chains/chainshipplan/uploadimages'
+  UPLOAD_IMAGES: '/api/app/chains/chainshipplan/uploadimages',
+  GET_PURCHASE_ORDER_STOCK_TAKE: '/api/app/products/productsellfoxpurchaseorder/getpurchaseorderstocktake',
+  UPLOAD_INVENTORY_IMAGES: '/api/app/products/productsellfoxpurchaseorder/uploadimages',
+  SUBMIT_STOCK_TAKE: '/api/app/products/productsellfoxpurchaseorder/purchaseordersubmitstocktake',
+  GET_COMMODITY_STOCK_TAKE: '/api/app/products/productsellfoxcommodity/getcommoditystocktake',
+  COMMODITY_SUBMIT_STOCK_TAKE: '/api/app/products/productsellfoxcommodity/commoditysubmitstocktake'
 }
 
 /**
@@ -215,6 +220,66 @@ export async function uploadImages(file) {
   return text ? JSON.parse(text) : { success: true }
 }
 
+/**
+ * 获取采购单盘点列表
+ */
+export async function getPurchaseOrderStockTake(params) {
+  return request(API_PATHS.GET_PURCHASE_ORDER_STOCK_TAKE, {
+    method: 'POST',
+    body: JSON.stringify(params)
+  })
+}
+
+/**
+ * 上传盘点图片
+ */
+export async function uploadInventoryImages(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(BASE_URL + API_PATHS.UPLOAD_INVENTORY_IMAGES, {
+    method: 'POST',
+    body: formData
+  })
+
+  if (!response.ok) {
+    throw new Error('图片上传失败')
+  }
+
+  const text = await response.text()
+  return text ? JSON.parse(text) : { success: true }
+}
+
+/**
+ * 提交盘点
+ */
+export async function submitStockTake(params) {
+  return request(API_PATHS.SUBMIT_STOCK_TAKE, {
+    method: 'POST',
+    body: JSON.stringify(params)
+  })
+}
+
+/**
+ * 获取商品盘点列表（无采购单）
+ */
+export async function getCommodityStockTake(params) {
+  return request(API_PATHS.GET_COMMODITY_STOCK_TAKE, {
+    method: 'POST',
+    body: JSON.stringify(params)
+  })
+}
+
+/**
+ * 提交商品盘点（无采购单）
+ */
+export async function commoditySubmitStockTake(params) {
+  return request(API_PATHS.COMMODITY_SUBMIT_STOCK_TAKE, {
+    method: 'POST',
+    body: JSON.stringify(params)
+  })
+}
+
 export default {
   getPdaListPaged,
   getPurchaseOrderByNo,
@@ -228,5 +293,10 @@ export default {
   createBoxSize,
   modifyBoxSize,
   removeBoxSize,
-  uploadImages
+  uploadImages,
+  getPurchaseOrderStockTake,
+  uploadInventoryImages,
+  submitStockTake,
+  getCommodityStockTake,
+  commoditySubmitStockTake
 }

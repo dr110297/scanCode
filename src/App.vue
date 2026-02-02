@@ -47,7 +47,7 @@
 </template>
 
 <script>
-import { getDingUserInfo } from './api/index.js'
+import { getDingUserInfo, getGoodsLocationAll } from './api/index.js'
 
 export default {
   name: 'App',
@@ -59,7 +59,8 @@ export default {
       userName: '',
       isAuthenticated: false,
       authLoading: true,
-      authErrorMsg: ''
+      authErrorMsg: '',
+      goodsLocationList: []
     }
   },
   provide() {
@@ -67,11 +68,13 @@ export default {
       showLoading: this.showLoading,
       hideLoading: this.hideLoading,
       showError: this.showError,
-      showSuccess: this.showSuccess
+      showSuccess: this.showSuccess,
+      getGoodsLocationList: () => this.goodsLocationList
     }
   },
   mounted() {
     this.initDingTalkLogin()
+    this.loadGoodsLocationList()
   },
   methods: {
     initDingTalkLogin() {
@@ -130,6 +133,18 @@ export default {
       setTimeout(() => {
         this.successMessage = ''
       }, 3000)
+    },
+    async loadGoodsLocationList() {
+      try {
+        const res = await getGoodsLocationAll()
+        if (res && res.items) {
+          this.goodsLocationList = res.items
+        } else if (Array.isArray(res)) {
+          this.goodsLocationList = res
+        }
+      } catch (error) {
+        console.error('获取货位列表失败:', error)
+      }
     }
   }
 }

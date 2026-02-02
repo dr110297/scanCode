@@ -15,6 +15,12 @@ const PackingList = () => import('../views/packing/List.vue')
 const BoxList = () => import('../views/packing/BoxList.vue')
 const BoxDetail = () => import('../views/packing/BoxDetail.vue')
 
+// 盘点模块
+const InventoryIndex = () => import('../views/inventory/Index.vue')
+const InventoryList = () => import('../views/inventory/List.vue')
+const InventoryDetail = () => import('../views/inventory/Detail.vue')
+const NoPurchaseOrder = () => import('../views/inventory/NoPurchaseOrder.vue')
+
 // 首页
 const Home = () => import('../views/Home.vue')
 
@@ -56,6 +62,27 @@ const routes = [
     path: '/packing/box-detail',
     name: 'BoxDetail',
     component: BoxDetail
+  },
+  // 盘点模块路由
+  {
+    path: '/inventory/index',
+    name: 'InventoryIndex',
+    component: InventoryIndex
+  },
+  {
+    path: '/inventory/list',
+    name: 'InventoryList',
+    component: InventoryList
+  },
+  {
+    path: '/inventory/detail',
+    name: 'InventoryDetail',
+    component: InventoryDetail
+  },
+  {
+    path: '/inventory/no-purchase-order',
+    name: 'NoPurchaseOrder',
+    component: NoPurchaseOrder
   }
 ]
 
