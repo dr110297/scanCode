@@ -302,15 +302,13 @@ export default {
         await this.$nextTick()
 
         const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode')
-        this.html5QrCode = new Html5Qrcode('packing-scanner-video-container')
+        this.html5QrCode = new Html5Qrcode('packing-scanner-video-container', { verbose: false })
 
-        // 扫描配置 - 不设置qrbox让整个画面都可以识别条码
+        // 优化的扫描配置 - 全屏扫描
         const config = {
-          fps: 10,
-          rememberLastUsedCamera: true,
-          experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true
-          },
+          fps: 15,
+          aspectRatio: 1.777778,
+          disableFlip: false,
           formatsToSupport: [
             Html5QrcodeSupportedFormats.CODE_128,
             Html5QrcodeSupportedFormats.CODE_39,
@@ -324,36 +322,29 @@ export default {
           ]
         }
 
-        try {
-          await this.html5QrCode.start(
-            { facingMode: 'environment' },
-            config,
-            async (decodedText) => {
-              console.log('扫描到条码:', decodedText)
-              await this.closeScannerOverlay()
-              this.searchKeyword = decodedText
-              await this.handleSearch()
-            },
-            () => {}
-          )
-        } catch (error) {
-          console.log('后置摄像头启动失败，尝试前置摄像头:', error)
-          try {
-            await this.html5QrCode.start(
-              { facingMode: 'user' },
-              config,
-              async (decodedText) => {
-                console.log('扫描到条码:', decodedText)
-                await this.closeScannerOverlay()
-                this.searchKeyword = decodedText
-                await this.handleSearch()
-              },
-              () => {}
-            )
-          } catch (err) {
-            throw err
-          }
+        // 视频约束配置
+        const cameraConfig = {
+          facingMode: 'environment',
+          width: { min: 640, ideal: 1280, max: 1920 },
+          height: { min: 480, ideal: 720, max: 1080 }
         }
+
+        if ('BarcodeDetector' in window) {
+          console.log('浏览器支持原生BarcodeDetector API，性能最佳')
+        }
+
+        await this.html5QrCode.start(
+          cameraConfig,
+          config,
+          async (decodedText) => {
+            console.log('扫描到条码:', decodedText)
+            await this.closeScannerOverlay()
+            this.searchKeyword = decodedText
+            await this.handleSearch()
+          },
+          () => {}
+        )
+        console.log('摄像头已启动，解码器已自动选择最优可用后端')
       } catch (error) {
         console.error('摄像头访问失败:', error)
         await this.closeScannerOverlay()
@@ -361,9 +352,10 @@ export default {
         const errorMessages = {
           NotAllowedError: '摄像头权限被拒绝，请在浏览器设置中允许访问摄像头',
           NotFoundError: '未找到摄像头设备',
-          NotReadableError: '摄像头被其他应用占用'
+          NotReadableError: '摄像头被其他应用占用',
+          OverconstrainedError: '摄像头不支持请求的配置'
         }
-        this.showError(errorMessages[error.name] || '无法启动摄像头扫码')
+        this.showError(errorMessages[error.name] || '无法启动摄像头扫码: ' + error.message)
       }
     },
     async closeScannerOverlay() {

@@ -57,7 +57,7 @@ export default {
       errorMessage: '',
       successMessage: '',
       userName: '',
-      isAuthenticated: false,
+      isAuthenticated: true,
       authLoading: true,
       authErrorMsg: '',
       goodsLocationList: []
@@ -82,12 +82,12 @@ export default {
       this.authErrorMsg = ''
 
       // 通过 userAgent 判断是否在钉钉客户端中
-      const isDingTalk = /DingTalk/i.test(navigator.userAgent)
-      if (!isDingTalk) {
-        this.authLoading = false
-        this.authErrorMsg = '请从钉钉客户端打开此页面'
-        return
-      }
+      // const isDingTalk = /DingTalk/i.test(navigator.userAgent)
+      // if (!isDingTalk) {
+      //   this.authLoading = false
+      //   this.authErrorMsg = '请从钉钉客户端打开此页面'
+      //   return
+      // }
 
       dd.ready(() => {
         dd.runtime.permission.requestAuthCode({

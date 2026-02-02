@@ -881,7 +881,8 @@ html, body {
 #allocation-scanner-video-container,
 #packing-scanner-video-container,
 #box-scanner-video-container,
-#sku-scanner-video-container {
+#sku-scanner-video-container,
+#no-purchase-scanner-video-container {
     width: 100% !important;
     height: 100% !important;
 }
@@ -891,20 +892,22 @@ html, body {
 #allocation-scanner-video-container video,
 #packing-scanner-video-container video,
 #box-scanner-video-container video,
-#sku-scanner-video-container video {
+#sku-scanner-video-container video,
+#no-purchase-scanner-video-container video {
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
 }
 
-/* 隐藏 html5-qrcode 的扫描框边框 */
+/* 显示 html5-qrcode 的扫描框边框 */
 #scanner-video-container #qr-shaded-region,
 #inventory-scanner-video-container #qr-shaded-region,
 #allocation-scanner-video-container #qr-shaded-region,
 #packing-scanner-video-container #qr-shaded-region,
 #box-scanner-video-container #qr-shaded-region,
-#sku-scanner-video-container #qr-shaded-region {
-    display: none !important;
+#sku-scanner-video-container #qr-shaded-region,
+#no-purchase-scanner-video-container #qr-shaded-region {
+    border-color: rgba(0, 255, 0, 0.5) !important;
 }
 
 #scanner-video-container img[alt="Info icon"],
@@ -912,7 +915,8 @@ html, body {
 #allocation-scanner-video-container img[alt="Info icon"],
 #packing-scanner-video-container img[alt="Info icon"],
 #box-scanner-video-container img[alt="Info icon"],
-#sku-scanner-video-container img[alt="Info icon"] {
+#sku-scanner-video-container img[alt="Info icon"],
+#no-purchase-scanner-video-container img[alt="Info icon"] {
     display: none !important;
 }
 
@@ -927,48 +931,6 @@ html, body {
     font-size: 14px;
     background: rgba(0, 0, 0, 0.6);
     z-index: 10;
-}
-
-/* 全屏扫描框指示线 */
-.scanner-overlay::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 250px;
-    height: 150px;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    border-radius: 8px;
-    z-index: 5;
-    pointer-events: none;
-    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
-}
-
-/* 扫描线动画 */
-.scanner-overlay::after {
-    content: '';
-    position: absolute;
-    top: calc(50% - 75px);
-    left: calc(50% - 125px);
-    width: 250px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #00ff00, transparent);
-    z-index: 6;
-    pointer-events: none;
-    animation: scanLine 2s linear infinite;
-}
-
-@keyframes scanLine {
-    0% {
-        top: calc(50% - 75px);
-    }
-    50% {
-        top: calc(50% + 75px);
-    }
-    100% {
-        top: calc(50% - 75px);
-    }
 }
 
 /* ==================== 通用样式 ==================== */

@@ -20,6 +20,7 @@ const InventoryIndex = () => import('../views/inventory/Index.vue')
 const InventoryList = () => import('../views/inventory/List.vue')
 const InventoryDetail = () => import('../views/inventory/Detail.vue')
 const NoPurchaseOrder = () => import('../views/inventory/NoPurchaseOrder.vue')
+const NoPurchaseOrderDetail = () => import('../views/inventory/NoPurchaseOrderDetail.vue')
 
 // 首页
 const Home = () => import('../views/Home.vue')
@@ -83,6 +84,11 @@ const routes = [
     path: '/inventory/no-purchase-order',
     name: 'NoPurchaseOrder',
     component: NoPurchaseOrder
+  },
+  {
+    path: '/inventory/no-purchase-order-detail',
+    name: 'NoPurchaseOrderDetail',
+    component: NoPurchaseOrderDetail
   }
 ]
 
