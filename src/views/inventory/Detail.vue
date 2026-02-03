@@ -165,6 +165,16 @@
                 size="small"
               />
             </div>
+            <div class="inventory-input-group" style="margin:10px 0 0 0px">
+              <label>备注信息:</label>
+              <el-input
+                v-model="inventoryInputs[getOriginalIndex(item)].note"
+                placeholder="请输入备注"
+                type="textarea"
+                size="small"
+                style="flex:1"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -288,7 +298,8 @@ export default {
     initInventoryInputs() {
       if (this.detailData && this.detailData.items) {
         this.inventoryInputs = this.detailData.items.map(item => ({
-          stocktakeNum: item.stocktakeNum || 0
+          stocktakeNum: item.stocktakeNum || 0,
+          note: item.note || ''
         }))
       }
     },
@@ -397,7 +408,8 @@ export default {
             const item = this.detailData.items[index]
             items.push({
               stocktakeNum: input.stocktakeNum,
-              id: item.id || ''
+              id: item.id || '',
+              note: input.note || ''
             })
           }
         })
@@ -451,7 +463,20 @@ export default {
   flex-wrap: wrap;
   gap: 10px;
 }
-
+.inventory-input-group {
+  display: flex;
+  align-items: center;
+  
+}
+::v-deep .inventory-input-group .el-textarea__inner{
+    height: 32px;
+}
+.inventory-input-group label {
+  font-size: 13px;
+  color: #666;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
 .preview-image-item {
   position: relative;
   width: calc((100% - 20px) / 3);

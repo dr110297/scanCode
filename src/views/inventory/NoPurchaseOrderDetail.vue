@@ -127,6 +127,16 @@
               size="small"
             />
           </div>
+          <div class="inventory-input-group" style="margin:10px 0 0 5px">
+            <label>备注信息:</label>
+            <el-input
+              v-model="item.note"
+              placeholder="请输入备注"
+              type="textarea"
+              size="small"
+              style="flex:1"
+            />
+          </div>
         </div>
       </div>
 
@@ -278,10 +288,11 @@ export default {
       const skuListStr = sessionStorage.getItem('noPurchaseOrderSkuList')
       if (skuListStr) {
         const rawList = JSON.parse(skuListStr)
-        // 初始化每条数据的 stocktakeNum
+        // 初始化每条数据的 stocktakeNum 和 note
         this.skuList = rawList.map(item => ({
           ...item,
-          stocktakeNum: item.stocktakeNum || 0
+          stocktakeNum: item.stocktakeNum || 0,
+          note: item.note || ''
         }))
 
         // 图片回显：从第一个有images的SKU中获取图片数据
@@ -372,6 +383,7 @@ export default {
     handleClear() {
       this.skuList.forEach(item => {
         item.stocktakeNum = 0
+        item.note = ''
       })
       this.sharedImages = []
     },
@@ -410,7 +422,8 @@ export default {
         // 构建数组格式的提交数据，所有SKU共用同一组图片
         const submitList = this.skuList.map(item => ({
           stocktakeNum: item.stocktakeNum,
-          id: item.id || ''
+          id: item.id || '',
+          note: item.note || ''
         }))
         const params = {
           goodsLocationId: this.selectedGoodsLocationId || '',
@@ -478,7 +491,8 @@ export default {
           } else {
             this.skuList.push({
               ...sku,
-              stocktakeNum: sku.stocktakeNum || 0
+              stocktakeNum: sku.stocktakeNum || 0,
+              note: sku.note || ''
             })
             this.showSuccess('添加成功')
           }
@@ -664,7 +678,8 @@ export default {
       newSkus.forEach(sku => {
         this.skuList.push({
           ...sku,
-          stocktakeNum: sku.stocktakeNum || 0
+          stocktakeNum: sku.stocktakeNum || 0,
+          note: sku.note || ''
         })
       })
 
@@ -908,8 +923,11 @@ export default {
 .inventory-input-group {
   display: flex;
   align-items: center;
+  
 }
-
+::v-deep .inventory-input-group .el-textarea__inner{
+    height: 32px;
+}
 .inventory-input-group label {
   font-size: 13px;
   color: #666;
